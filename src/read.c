@@ -5,19 +5,32 @@
 #include <string.h>
 #include <errno.h>
 
-static const JDXHeader JDX_ERROR_HEADER = { { -1, -1, -1 }, -1, -1, -1, -1, -1, "unspecified error" };
-static const JDXObject JDX_ERROR_OBJECT = { { -1, -1, -1 }, NULL, NULL, -1, "unspecified error" };
+static inline JDXHeader construct_error_header(const char *error) {
+    JDXHeader error_header = {
+        { -1, -1, -1 },
+        -1, -1, -1, -1, -1,
+        error
+    };
+
+    return error_header;
+}
+
+static inline JDXObject construct_error_object(const char *error) {
+    JDXObject error_obj = {
+        { -1, -1, -1 },
+        NULL, NULL, -1,
+        error
+    };
+
+    return error_obj;
+}
 
 JDXHeader JDX_ReadHeaderFromFile(FILE *file) {
     char corruption_check[3];
     fread(corruption_check, sizeof(corruption_check), 1, file);
 
-    if (memcmp(corruption_check, "JDX", 3) != 0) {
-        JDXHeader error_header = JDX_ERROR_HEADER;
-        error_header.error = "corruption check failed";
-
-        return error_header;
-    }
+    if (memcmp(corruption_check, "JDX", 3) != 0)
+        return construct_error_header("corruption check failed");
 
     JDXHeader header;
     char color_signature[4];
@@ -29,12 +42,8 @@ JDXHeader JDX_ReadHeaderFromFile(FILE *file) {
     fread(&header.image_count, sizeof(header.image_count), 1, file);
     fread(&header.body_size, sizeof(header.body_size), 1, file);
 
-    if (header.image_width < 0 || header.image_height < 0 || header.image_count < 0 || header.body_size < 0) {
-        JDXHeader error_header = JDX_ERROR_HEADER;
-        error_header.error = "invalid negative value";
-
-        return error_header;
-    }
+    if (header.image_width < 0 || header.image_height < 0 || header.image_count < 0 || header.body_size < 0)
+        return construct_error_header("invalid header item");
 
     JDXColorType color_type;
     if (memcmp(color_signature, "RGB8", 4) == 0) {
@@ -44,10 +53,7 @@ JDXHeader JDX_ReadHeaderFromFile(FILE *file) {
     } else if (memcmp(color_signature, "GRAY", 4) == 0) {
         color_type = JDXColorType_GRAY;
     } else {
-        JDXHeader error_header = JDX_ERROR_HEADER;
-        error_header.error = "invalid color signature";
-
-        return error_header;
+        return construct_error_header("invalid color signature");
     }
 
     header.color_type = color_type;
@@ -57,22 +63,21 @@ JDXHeader JDX_ReadHeaderFromFile(FILE *file) {
 
 JDXHeader JDX_ReadHeaderFromPath(const char *path) {
     FILE *file = fopen(path, "rb");
-    if (file == NULL) return JDX_ERROR_HEADER;
+
+    if (file == NULL)
+        return construct_error_header("cannot open file");
 
     JDXHeader header = JDX_ReadHeaderFromFile(file);
-    fclose(file);
 
+    fclose(file);
     return header;
 }
 
 JDXObject JDX_ReadObjectFromFile(FILE *file) {
     JDXHeader header = JDX_ReadHeaderFromFile(file);
-    if (header.error) {
-        JDXObject error_obj = JDX_ERROR_OBJECT;
-        error_obj.error = header.error;
 
-        return error_obj;
-    }
+    if (header.error)
+        return construct_error_object(header.error);
 
     JDXObject obj = {
         header.version,
@@ -101,12 +106,8 @@ JDXObject JDX_ReadObjectFromFile(FILE *file) {
 
     libdeflate_free_decompressor(decoder);
 
-    if (decode_result != LIBDEFLATE_SUCCESS) {
-        JDXObject error_obj = JDX_ERROR_OBJECT;
-        error_obj.error = "decoding unsuccessful";
-
-        return error_obj;
-    }
+    if (decode_result != LIBDEFLATE_SUCCESS)
+        return construct_error_object("failed to decode");
 
     uint8_t *chunk_ptr = decoded_body;
     for (int i = 0; i < header.image_count; i++) {
@@ -129,19 +130,14 @@ JDXObject JDX_ReadObjectFromFile(FILE *file) {
         obj.labels[i] = label;
     }
 
-    // Close file and return object
-    fclose(file);
     return obj;
 }
 
 JDXObject JDX_ReadObjectFromPath(const char *path) {
     FILE *file = fopen(path, "rb");
-    if (file == NULL) {
-        JDXObject error_obj = JDX_ERROR_OBJECT;
-        error_obj.error = "cannot open file";
 
-        return error_obj;
-    }
+    if (file == NULL)
+        return construct_error_object("cannot open file");
 
     JDXObject obj = JDX_ReadObjectFromFile(file);
 
