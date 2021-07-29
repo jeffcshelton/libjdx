@@ -33,6 +33,15 @@ typedef struct {
     int64_t bodySize;
 } JDXHeader;
 
+const JDXHeader JDX_ERROR_HEADER = {
+    { -1, -1, -1},
+    -1,
+
+    -1, -1,
+    -1,
+    -1
+};
+
 typedef struct {
     JDXVersion version;
 
@@ -41,7 +50,7 @@ typedef struct {
     int64_t itemCount;
 } JDXObject;
 
-const JDXObject JDXOBJECT_ERROR = {
+const JDXObject JDX_ERROR_OBJECT = {
     { -1, -1, -1 },
     NULL,
     NULL,
