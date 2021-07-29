@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <stdio.h>
 
 typedef struct {
     uint8_t major, minor, patch;
@@ -44,3 +45,8 @@ typedef struct {
 
     const char *error;
 } JDXObject;
+
+JDXHeader JDX_ReadHeaderFromFile(FILE *file);
+JDXHeader JDX_ReadHeaderFromPath(const char *path);
+
+JDXObject JDX_ReadObjectFromPath(const char *path);
