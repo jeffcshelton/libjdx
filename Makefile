@@ -1,5 +1,6 @@
 CC = gcc
-CFLAGS = -std=c17 -I./include -Wall -O3
+CFLAGS = -std=c17 -I./include -Wall -pedantic -O3
+LD_FLAGS = -L/usr/local/lib -ldeflate
 
 UNAME := $(shell uname)
 ifeq ($(UNAME),Darwin)
@@ -11,7 +12,10 @@ endif
 SRCS := $(wildcard src/*.c src/**/*.c)
 OBJS := $(patsubst %.c,%_c.o,$(subst src/,build/,$(SRCS)))
 
-.PHONY: jdx install uninstall clean
+TEST_SRCS := $(wildcard tests/*.c)
+TEST_OBJS := $(patsubst %.c,%_c.o,$(subst tests/,build/tests/,$(TEST_SRCS)))
+
+.PHONY: jdx install uninstall tests clean
 
 jdx: jdx-static jdx-dynamic
 
@@ -24,15 +28,23 @@ uninstall:
 	rm -rf /usr/local/include/jdx
 	rm -f /usr/local/lib/libjdx.a /usr/local/lib/libjdx.$(DYN_EXT)
 
+tests: $(OBJS) $(TEST_OBJS)
+	@mkdir -p bin
+	$(CC) $(CFLAGS) $(LD_FLAGS) $^ -o bin/tests
+
 jdx-static: $(OBJS)
 	@mkdir -p lib
 	@ar -r lib/libjdx.a $^
 
 jdx-dynamic: $(OBJS)
 	@mkdir -p lib
-	$(CC) -shared -fpic $^ -o lib/libjdx.$(DYN_EXT)
+	$(CC) $(LD_FLAGS) -shared -fpic $^ -o lib/libjdx.$(DYN_EXT)
 
 build/%_c.o: src/%.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -c $^ -o $@
+
+build/tests/%_c.o: tests/%.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $^ -o $@
 
