@@ -10,9 +10,9 @@ typedef struct {
 const JDXVersion JDX_VERSION = { 0, 1, 0 };
 
 typedef enum {
-    RGB = 3,
-    RGBA = 4,
-    GRAY = 1
+    JDXColorType_RGB = 3,
+    JDXColorType_RGBA = 4,
+    JDXColorType_GRAY = 1
 } JDXColorType;
 
 typedef struct {
