@@ -6,6 +6,9 @@
 #include <errno.h>
 #include <stdio.h>
 
+static const JDXHeader JDX_ERROR_HEADER = { { -1, -1, -1 }, -1, -1, -1, -1, -1, "unspecified error" };
+static const JDXObject JDX_ERROR_OBJECT = { { -1, -1, -1 }, NULL, NULL, -1, "unspecified error" };
+
 JDXHeader JDX_ReadHeaderFromFile(FILE *file) {
     char corruptionCheck[3];
     fread(corruptionCheck, sizeof(corruptionCheck), 1, file);
