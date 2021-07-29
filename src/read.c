@@ -10,44 +10,44 @@ static const JDXHeader JDX_ERROR_HEADER = { { -1, -1, -1 }, -1, -1, -1, -1, -1, 
 static const JDXObject JDX_ERROR_OBJECT = { { -1, -1, -1 }, NULL, NULL, -1, "unspecified error" };
 
 JDXHeader JDX_ReadHeaderFromFile(FILE *file) {
-    char corruptionCheck[3];
-    fread(corruptionCheck, sizeof(corruptionCheck), 1, file);
+    char corruption_check[3];
+    fread(corruption_check, sizeof(corruption_check), 1, file);
 
-    if (memcmp(corruptionCheck, "JDX", 3) != 0)
+    if (memcmp(corruption_check, "JDX", 3) != 0)
         return JDX_ERROR_HEADER;
 
     JDXVersion version;
-    char colorSignature[4];
+    char color_signature[4];
     int16_t width, height;
-    int64_t imageCount, bodySize;
+    int64_t image_count, body_size;
 
     fread(&version, sizeof(JDXVersion), 1, file);
-    fread(colorSignature, sizeof(colorSignature), 1, file);
+    fread(color_signature, sizeof(color_signature), 1, file);
     fread(&width, sizeof(width), 1, file);
     fread(&height, sizeof(height), 1, file);
-    fread(&imageCount, sizeof(imageCount), 1, file);
-    fread(&bodySize, sizeof(bodySize), 1, file);
+    fread(&image_count, sizeof(image_count), 1, file);
+    fread(&body_size, sizeof(body_size), 1, file);
 
-    if (width < 0 || height < 0 || imageCount < 0 || bodySize < 0)
+    if (width < 0 || height < 0 || image_count < 0 || body_size < 0)
         return JDX_ERROR_HEADER;
 
-    JDXColorType colorType;
-    if (memcmp(colorSignature, "RGB8", 4) == 0) {
-        colorType = JDXColorType_RGB;
-    } else if (memcmp(colorSignature, "RGBA", 4) == 0) {
-        colorType = JDXColorType_RGBA;
-    } else if (memcmp(colorSignature, "GRAY", 4) == 0) {
-        colorType = JDXColorType_GRAY;
+    JDXColorType color_type;
+    if (memcmp(color_signature, "RGB8", 4) == 0) {
+        color_type = JDXColorType_RGB;
+    } else if (memcmp(color_signature, "RGBA", 4) == 0) {
+        color_type = JDXColorType_RGBA;
+    } else if (memcmp(color_signature, "GRAY", 4) == 0) {
+        color_type = JDXColorType_GRAY;
     } else {
         return JDX_ERROR_HEADER;
     }
 
     JDXHeader header = {
         version,
-        colorType,
+        color_type,
         width, height,
-        imageCount,
-        bodySize
+        image_count,
+        body_size
     };
 
     return header;

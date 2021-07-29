@@ -19,18 +19,18 @@ typedef struct {
     uint8_t *pixels;
 
     int16_t width, height;
-    JDXColorType colorType;
+    JDXColorType color_type;
 } JDXImage;
 
 typedef int16_t JDXLabel;
 
 typedef struct {
     JDXVersion version;
-    JDXColorType colorType;
+    JDXColorType color_type;
 
-    int16_t imageWidth, imageHeight;
-    int64_t imageCount;
-    int64_t bodySize;
+    int16_t image_width, image_height;
+    int64_t image_count;
+    int64_t body_size;
 
     const char *error;
 } JDXHeader;
@@ -40,7 +40,7 @@ typedef struct {
 
     JDXImage *images;
     JDXLabel *labels;
-    int64_t itemCount;
+    int64_t item_count;
 
     const char *error;
 } JDXObject;
