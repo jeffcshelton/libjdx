@@ -16,19 +16,17 @@ JDXHeader JDX_ReadHeaderFromFile(FILE *file) {
     if (memcmp(corruption_check, "JDX", 3) != 0)
         return JDX_ERROR_HEADER;
 
-    JDXVersion version;
+    JDXHeader header;
     char color_signature[4];
-    int16_t width, height;
-    int64_t image_count, body_size;
 
-    fread(&version, sizeof(JDXVersion), 1, file);
+    fread(&header.version, sizeof(JDXVersion), 1, file);
     fread(color_signature, sizeof(color_signature), 1, file);
-    fread(&width, sizeof(width), 1, file);
-    fread(&height, sizeof(height), 1, file);
-    fread(&image_count, sizeof(image_count), 1, file);
-    fread(&body_size, sizeof(body_size), 1, file);
+    fread(&header.image_width, sizeof(header.image_width), 1, file);
+    fread(&header.image_height, sizeof(header.image_height), 1, file);
+    fread(&header.image_count, sizeof(header.image_count), 1, file);
+    fread(&header.body_size, sizeof(header.body_size), 1, file);
 
-    if (width < 0 || height < 0 || image_count < 0 || body_size < 0)
+    if (header.image_width < 0 || header.image_height < 0 || header.image_count < 0 || header.body_size < 0)
         return JDX_ERROR_HEADER;
 
     JDXColorType color_type;
@@ -42,14 +40,7 @@ JDXHeader JDX_ReadHeaderFromFile(FILE *file) {
         return JDX_ERROR_HEADER;
     }
 
-    JDXHeader header = {
-        version,
-        color_type,
-        width, height,
-        image_count,
-        body_size
-    };
-
+    header.color_type = color_type;
     return header;
 }
 
