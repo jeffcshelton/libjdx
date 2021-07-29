@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stddef.h>
 
 typedef struct {
     uint8_t major, minor, patch;
@@ -36,6 +37,13 @@ typedef struct {
     JDXVersion version;
 
     JDXImage *images;
-    JDXLabel *labels; 
+    JDXLabel *labels;
     int64_t itemCount;
 } JDXObject;
+
+const JDXObject JDXOBJECT_ERROR = {
+    { -1, -1, -1 },
+    NULL,
+    NULL,
+    -1
+};
