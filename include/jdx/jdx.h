@@ -31,16 +31,9 @@ typedef struct {
     int16_t imageWidth, imageHeight;
     int64_t imageCount;
     int64_t bodySize;
+
+    const char *error;
 } JDXHeader;
-
-const JDXHeader JDX_ERROR_HEADER = {
-    { -1, -1, -1},
-    -1,
-
-    -1, -1,
-    -1,
-    -1
-};
 
 typedef struct {
     JDXVersion version;
@@ -48,11 +41,6 @@ typedef struct {
     JDXImage *images;
     JDXLabel *labels;
     int64_t itemCount;
-} JDXObject;
 
-const JDXObject JDX_ERROR_OBJECT = {
-    { -1, -1, -1 },
-    NULL,
-    NULL,
-    -1
-};
+    const char *error;
+} JDXObject;
