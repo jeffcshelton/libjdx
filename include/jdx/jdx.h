@@ -49,4 +49,5 @@ typedef struct {
 JDXHeader JDX_ReadHeaderFromFile(FILE *file);
 JDXHeader JDX_ReadHeaderFromPath(const char *path);
 
+JDXObject JDX_ReadObjectFromFile(FILE *file);
 JDXObject JDX_ReadObjectFromPath(const char *path);

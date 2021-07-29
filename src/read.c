@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <stdio.h>
 
 static const JDXHeader JDX_ERROR_HEADER = { { -1, -1, -1 }, -1, -1, -1, -1, -1, "unspecified error" };
 static const JDXObject JDX_ERROR_OBJECT = { { -1, -1, -1 }, NULL, NULL, -1, "unspecified error" };
@@ -66,15 +65,7 @@ JDXHeader JDX_ReadHeaderFromPath(const char *path) {
     return header;
 }
 
-JDXObject JDX_ReadObjectFromPath(const char *path) {
-    FILE *file = fopen(path, "rb");
-    if (file == NULL) {
-        JDXObject error_obj = JDX_ERROR_OBJECT;
-        error_obj.error = "cannot open file";
-
-        return error_obj;
-    }
-
+JDXObject JDX_ReadObjectFromFile(FILE *file) {
     JDXHeader header = JDX_ReadHeaderFromFile(file);
     if (header.error) {
         JDXObject error_obj = JDX_ERROR_OBJECT;
@@ -139,6 +130,21 @@ JDXObject JDX_ReadObjectFromPath(const char *path) {
     }
 
     // Close file and return object
+    fclose(file);
+    return obj;
+}
+
+JDXObject JDX_ReadObjectFromPath(const char *path) {
+    FILE *file = fopen(path, "rb");
+    if (file == NULL) {
+        JDXObject error_obj = JDX_ERROR_OBJECT;
+        error_obj.error = "cannot open file";
+
+        return error_obj;
+    }
+
+    JDXObject obj = JDX_ReadObjectFromFile(file);
+
     fclose(file);
     return obj;
 }
