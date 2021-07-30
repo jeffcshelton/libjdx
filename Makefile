@@ -49,4 +49,4 @@ build/tests/%_c.o: tests/%.c
 	$(CC) $(CFLAGS) -c $^ -o $@
 
 clean:
-	@rm -rf build lib
+	@rm -rf build lib bin
