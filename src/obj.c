@@ -86,3 +86,11 @@ JDXObject JDX_ReadObjectFromPath(const char *path) {
     fclose(file);
     return obj;
 }
+
+void JDX_FreeObject(JDXObject obj) {
+    for (int i = 0; i < obj.item_count; i++)
+        free(obj.images[i].pixels);
+
+    free(obj.images);
+    free(obj.labels);
+}
