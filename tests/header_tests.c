@@ -8,9 +8,9 @@ void Test_ReadHeaderFromPath(void) {
     did_fail = !(
         memcmp(&header.version, &JDX_VERSION, 3) == 0 &&
         header.color_type == JDXColorType_RGB &&
-        header.image_width == 1698 &&
-        header.image_height == 2200 &&
-        header.image_count == 6 &&
+        header.image_width == 52 &&
+        header.image_height == 52 &&
+        header.image_count == 8 &&
         header.error == NULL
     );
 }

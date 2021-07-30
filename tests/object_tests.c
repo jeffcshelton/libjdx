@@ -7,7 +7,7 @@ void Test_ReadObjectFromPath(void) {
 
     did_fail = !(
         memcmp(&obj.version, &JDX_VERSION, 3) == 0 &&
-        obj.item_count == 6 &&
+        obj.item_count == 8 &&
         obj.error == NULL
     );
 
