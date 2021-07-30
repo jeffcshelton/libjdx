@@ -1,19 +1,9 @@
 #include "jdx/jdx.h"
 
-#include <libdeflate.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
-
-static inline JDXHeader construct_error_header(const char *error) {
-    JDXHeader error_header = {
-        { -1, -1, -1 },
-        -1, -1, -1, -1, -1,
-        error
-    };
-
-    return error_header;
-}
+#include <libdeflate.h>
 
 static inline JDXObject construct_error_object(const char *error) {
     JDXObject error_obj = {
@@ -23,54 +13,6 @@ static inline JDXObject construct_error_object(const char *error) {
     };
 
     return error_obj;
-}
-
-JDXHeader JDX_ReadHeaderFromFile(FILE *file) {
-    char corruption_check[3];
-    fread(corruption_check, sizeof(corruption_check), 1, file);
-
-    if (memcmp(corruption_check, "JDX", 3) != 0)
-        return construct_error_header("corruption check failed");
-
-    JDXHeader header;
-    char color_signature[4];
-
-    fread(&header.version, sizeof(JDXVersion), 1, file);
-    fread(color_signature, sizeof(color_signature), 1, file);
-    fread(&header.image_width, sizeof(header.image_width), 1, file);
-    fread(&header.image_height, sizeof(header.image_height), 1, file);
-    fread(&header.image_count, sizeof(header.image_count), 1, file);
-    fread(&header.body_size, sizeof(header.body_size), 1, file);
-
-    if (header.image_width < 0 || header.image_height < 0 || header.image_count < 0 || header.body_size < 0)
-        return construct_error_header("invalid header item");
-
-    JDXColorType color_type;
-    if (memcmp(color_signature, "RGB8", 4) == 0) {
-        color_type = JDXColorType_RGB;
-    } else if (memcmp(color_signature, "RGBA", 4) == 0) {
-        color_type = JDXColorType_RGBA;
-    } else if (memcmp(color_signature, "GRAY", 4) == 0) {
-        color_type = JDXColorType_GRAY;
-    } else {
-        return construct_error_header("invalid color signature");
-    }
-
-    header.color_type = color_type;
-    header.error = NULL;
-    return header;
-}
-
-JDXHeader JDX_ReadHeaderFromPath(const char *path) {
-    FILE *file = fopen(path, "rb");
-
-    if (file == NULL)
-        return construct_error_header("cannot open file");
-
-    JDXHeader header = JDX_ReadHeaderFromFile(file);
-
-    fclose(file);
-    return header;
 }
 
 JDXObject JDX_ReadObjectFromFile(FILE *file) {

@@ -8,7 +8,7 @@ typedef struct {
     uint8_t major, minor, patch;
 } JDXVersion;
 
-const JDXVersion JDX_VERSION = { 0, 1, 0 };
+extern const JDXVersion JDX_VERSION;
 
 typedef enum {
     JDXColorType_RGB = 3,
