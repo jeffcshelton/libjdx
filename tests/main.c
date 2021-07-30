@@ -4,7 +4,10 @@
 #include <time.h>
 
 // Typedef that all test function signatures must follow
-typedef void (*Test)(void);
+typedef struct {
+    void (*func)(void);
+    const char *name;
+} Test;
 
 // Starting and ending times of tests
 struct timespec start, end;
@@ -25,12 +28,12 @@ static void print_duration(void) {
 }
 
 static void print_pass(void) {
-    printf("\x1b[31mfailed\x1b[0m | ");
+    printf("\x1b[32mpassed\x1b[0m | ");
     print_duration();
 }
 
 static void print_fail(void) {
-    printf("\x1b[32mpassed\x1b[0m | ");
+    printf("\x1b[31mfailed\x1b[0m | ");
     print_duration();
 }
 
@@ -46,7 +49,12 @@ int main(void) {
     // Run each test and print according to whether it passed or failed
     for (int t = 0; t < test_count; t++) {
         did_fail = false;
-        tests[t]();
+
+        printf("\x1b[33m[\x1b[1m%s\x1b[0;33m]\x1b[0m ", tests[t].name);
+
+        clock_gettime(CLOCK_REALTIME, &start);
+        tests[t].func();
+        clock_gettime(CLOCK_REALTIME, &end);
 
         if (did_fail) {
             print_fail();
