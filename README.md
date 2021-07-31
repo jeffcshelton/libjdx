@@ -10,6 +10,12 @@ libjdx requires [libdeflate](https://github.com/ebiggers/libdeflate). If you are
 
 On Linux, you can compile it from source by following the instructions under "For UNIX" of the [libdeflate repository](https://github.com/ebiggers/libdeflate). As of now, libjdx does not support Windows but will before it is out of alpha.
 
+After installing libdeflate, you can compile and install libjdx from source by cloning this repository, navigating to its directory in a terminal, and typing:
+
+`$ make install`
+
+This will compile static and dynamic libraries for libjdx and place them in `/usr/local/lib` as well as copy header files into `/usr/local/include/jdx`. To use the library in your project, you must set the library search path and include path accordingly using the compiler flags `-L/usr/local/lib` and `-I/usr/local/include` when compiling your project. On many machines, these paths are searched by default, so this step may not be necessary depending on your project environment.
+
 ## Usage
 
 To read from a JDX file and iterate through the images and labels within it:
@@ -76,4 +82,4 @@ Like the other JDX tools and the format itself, libjdx is in alpha and under con
 
 ## License
 
-libjdx is licensed under the [MIT License](LICENSE)
+libjdx is licensed under the [MIT License](LICENSE).
