@@ -61,7 +61,7 @@ JDXObject JDX_ReadObjectFromFile(FILE *file) {
         };
 
         // Copy image data into new image buffer and advance chunk ptr
-        memcpy(img.pixels, chunk_ptr, image_size);
+        memcpy(img.data, chunk_ptr, image_size);
         chunk_ptr += image_size;
 
         // Type pun end of chunk into label and advance chunk ptr again
@@ -89,7 +89,7 @@ JDXObject JDX_ReadObjectFromPath(const char *path) {
 
 void JDX_FreeObject(JDXObject obj) {
     for (int i = 0; i < obj.item_count; i++)
-        free(obj.images[i].pixels);
+        free(obj.images[i].data);
 
     free(obj.images);
     free(obj.labels);

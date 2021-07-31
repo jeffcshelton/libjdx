@@ -17,7 +17,7 @@ typedef enum {
 } JDXColorType;
 
 typedef struct {
-    uint8_t *pixels;
+    uint8_t *data;
 
     int16_t width, height;
     JDXColorType color_type;
