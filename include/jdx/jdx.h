@@ -4,6 +4,10 @@
 #include <stddef.h>
 #include <stdio.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
     uint8_t major, minor, patch;
 } JDXVersion;
@@ -52,3 +56,7 @@ JDXHeader JDX_ReadHeaderFromPath(const char *path);
 JDXObject JDX_ReadObjectFromFile(FILE *file);
 JDXObject JDX_ReadObjectFromPath(const char *path);
 void JDX_FreeObject(JDXObject obj);
+
+#ifdef __cplusplus
+}
+#endif
