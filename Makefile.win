@@ -1,0 +1,29 @@
+.SUFFIXES: .c .obj
+
+CC = cl
+LD = link
+AR = lib
+
+CC_FLAGS = /std:c17 /Iinclude /Wall /O2
+
+STATIC_LIB = lib/libjdx.lib
+SHARED_LIB = lib/libjdx.dll
+
+OBJS = build/header.obj build/obj.obj
+
+all: $(STATIC_LIB) $(SHARED_LIB)
+
+$(STATIC_LIB): $(OBJS)
+    @if not exist lib mkdir lib
+    $(AR) $(AR_FLAGS) /out:$@ $(OBJS)
+
+$(SHARED_LIB): $(OBJS)
+    @if not exist lib mkdir lib
+    $(LD) $(LD_FLAGS) /out:$@ /dll $(OBJS)
+
+{src/}.c{build/}.obj:
+    @if not exist build mkdir build
+    $(CC) /c /Fo$@ $(CC_FLAGS) $**
+
+clean:
+    rmdir /S /Q build lib
