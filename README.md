@@ -8,13 +8,17 @@ libjdx requires [libdeflate](https://github.com/ebiggers/libdeflate). If you are
 
 `$ brew install libdeflate`
 
-On Linux, you can compile it from source by following the instructions under "For UNIX" of the [libdeflate repository](https://github.com/ebiggers/libdeflate). As of now, libjdx does not support Windows but will before it is out of alpha.
+On Linux or Windows, you can compile it from source by following the instructions in the [libdeflate repository](https://github.com/ebiggers/libdeflate).
 
-After installing libdeflate, you can compile and install libjdx from source by cloning this repository, navigating to its directory in a terminal, and typing:
+After installing libdeflate, you can compile and install libjdx from source by cloning this repository, making sure the libdeflate library and header are accessible (only necessary in most cases on Windows), navigating to its directory in a terminal, and typing:
 
 `$ make install`
 
-This will compile static and dynamic libraries for libjdx and place them in `/usr/local/lib` as well as copy header files into `/usr/local/include/jdx`. To use the library in your project, you must set the library search path and include path accordingly using the compiler flags `-L/usr/local/lib` and `-I/usr/local/include` when compiling your project. On many machines, these paths are searched by default, so this step may not be necessary depending on your project environment.
+or on Windows in the Visual Studio Developer Command Prompt:
+
+`$ nmake /f Makefile.win`
+
+This will compile static and dynamic libraries for libjdx and place them in `/usr/local/lib` as well as copy header files into `/usr/local/include/jdx` on Linux and macOS. On Windows, there is no install target and files must be placed manually. To use the library in your project, you must set the library search path and include path accordingly using the compiler flags `-L/usr/local/lib` and `-I/usr/local/include` when compiling your project. On many machines, these paths are searched by default, so this step may not be necessary depending on your project environment.
 
 ## Usage
 
