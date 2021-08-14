@@ -18,7 +18,7 @@ or on Windows in the Visual Studio Developer Command Prompt:
 
 `$ nmake /f Makefile.win`
 
-This will compile static and dynamic libraries for libjdx and place them in `/usr/local/lib` as well as copy header files into `/usr/local/include/jdx` on Linux and macOS. On Windows, there is no install target and files must be placed manually. To use the library in your project, you must set the library search path and include path accordingly using the compiler flags `-L/usr/local/lib` and `-I/usr/local/include` when compiling your project. On many machines, these paths are searched by default, so this step may not be necessary depending on your project environment.
+This will compile static and dynamic libraries for libjdx and place them in `/usr/local/lib` as well as copy header files into `/usr/local/include/jdx` on Linux and macOS. On Windows, there is no install target, so compiled static and dynamic libraries are placed in the `lib` directory, and from there must be placed manually. To use the library in your project, you must set the library search path and include path accordingly using the compiler flags `-L/usr/local/lib` and `-I/usr/local/include` when compiling your project. On many machines, these paths are searched by default, so this step may not be necessary depending on your project environment.
 
 ## Usage
 
