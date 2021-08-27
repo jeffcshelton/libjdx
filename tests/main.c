@@ -37,12 +37,18 @@ static void print_fail(void) {
     print_duration();
 }
 
+static void setup_testing_environment(void) {
+    example_obj = JDX_ReadObjectFromPath("./res/example.jdx");
+}
+
 int main(void) {
     // List of tests that need to be executed
     Test tests[] = {
         { Test_ReadHeaderFromPath, "ReadHeaderFromPath" },
         { Test_ReadObjectFromPath, "ReadObjectFromPath" }
     };
+
+    setup_testing_environment();
 
     int test_count = sizeof(tests) / sizeof(Test);
     int fail_count = 0;
