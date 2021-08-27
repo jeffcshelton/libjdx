@@ -44,6 +44,10 @@ static void setup_testing_environment(void) {
     example_obj = JDX_ReadObjectFromPath("./res/example.jdx");
 }
 
+static void destroy_testing_environment(void) {
+    JDX_FreeObject(example_obj);
+}
+
 int main(void) {
     // List of tests that need to be executed
     Test tests[] = {
@@ -79,4 +83,6 @@ int main(void) {
 
     printf("\nPassed \x1b[32m%d\x1b[0m tests.\n", test_count - fail_count);
     printf("Failed \x1b[%dm%d\x1b[0m tests.\n", color_code, fail_count);
+
+    destroy_testing_environment();
 }
