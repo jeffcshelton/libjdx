@@ -152,10 +152,20 @@ void JDX_WriteObjectToFile(JDXObject obj, FILE *file) {
 
     fwrite(&compressed_size, sizeof(int64_t), 1, file);
     fwrite(compressed_body, 1, compressed_size, file);
-    fclose(file);
+    fflush(file);
 
     free(uncompressed_body);
     free(compressed_body);
+}
+
+void JDX_WriteObjectToPath(JDXObject obj, const char *path) {
+    FILE *file = fopen(path, "wb");
+
+    if (file == NULL)
+        return;
+
+    JDX_WriteObjectToFile(obj, file);
+    fclose(file);
 }
 
 void JDX_FreeObject(JDXObject obj) {
