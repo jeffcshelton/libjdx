@@ -12,6 +12,9 @@ typedef struct {
 // Starting and ending times of tests
 struct timespec start, end;
 
+// Constant environment variables accessible by tests
+JDXObject exmaple_obj;
+
 // Variable set by tests to indicate if they failed
 bool did_fail;
 
