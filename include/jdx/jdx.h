@@ -55,6 +55,10 @@ JDXHeader JDX_ReadHeaderFromPath(const char *path);
 
 JDXObject JDX_ReadObjectFromFile(FILE *file);
 JDXObject JDX_ReadObjectFromPath(const char *path);
+
+void JDX_WriteObjectToFile(JDXObject obj, FILE *file);
+void JDX_WriteObjectToPath(JDXObject obj, const char *path);
+
 void JDX_FreeObject(JDXObject obj);
 
 #ifdef __cplusplus
