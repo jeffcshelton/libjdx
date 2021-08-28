@@ -12,3 +12,4 @@ extern bool did_fail;
 // Test definitions
 void Test_ReadHeaderFromPath(void);
 void Test_ReadObjectFromPath(void);
+void Test_WriteObjectToPath(void);

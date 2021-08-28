@@ -52,7 +52,8 @@ int main(void) {
     // List of tests that need to be executed
     Test tests[] = {
         { Test_ReadHeaderFromPath, "ReadHeaderFromPath" },
-        { Test_ReadObjectFromPath, "ReadObjectFromPath" }
+        { Test_ReadObjectFromPath, "ReadObjectFromPath" },
+        { Test_WriteObjectToPath, "WriteObjectToPath" }
     };
 
     setup_testing_environment();
