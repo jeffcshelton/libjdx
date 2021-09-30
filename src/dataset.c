@@ -16,7 +16,7 @@ static inline JDXDataset construct_error(const char *error_msg) {
     return error_struct;
 }
 
-JDXDataset JDX_ReadDatasetFromFile(FILE *file) {
+JDXDataset JDX_ReadDatasetFromFile(FILE *file, void (*external_deflate_decompress)(const uint8_t *compressed, uint8_t *decompressed, size_t compressed_size, size_t decompressed_size)) {
     JDXHeader header = JDX_ReadHeaderFromFile(file);
 
     if (header.error)
@@ -30,29 +30,39 @@ JDXDataset JDX_ReadDatasetFromFile(FILE *file) {
         NULL
     };
 
-    uint8_t *encoded_body = malloc(header.body_size);
-    fread(encoded_body, 1, header.body_size, file);
+    uint8_t *compressed_body = malloc(header.body_size);
+    fread(compressed_body, 1, header.body_size, file);
 
     size_t image_size = (size_t) header.image_width *
                         (size_t) header.image_height *
                         (size_t) header.color_type;
 
-    size_t decoded_body_size = (image_size + 2) * (size_t) header.image_count;
-    uint8_t *decoded_body = malloc(decoded_body_size);
+    size_t decompressed_body_size = (image_size + 2) * (size_t) header.image_count;
+    uint8_t *decompressed_body = malloc(decompressed_body_size);
 
-    // Decode/decompress encoded body and free the decompressor
-    struct libdeflate_decompressor *decoder = libdeflate_alloc_decompressor();
-    enum libdeflate_result decode_result = libdeflate_deflate_decompress(
-        decoder, encoded_body, header.body_size,
-        decoded_body, decoded_body_size, NULL
-    );
+    if (external_deflate_decompress) {
+        external_deflate_decompress(compressed_body, decompressed_body, header.body_size, decompressed_body_size);
+    } else {
+#ifdef LIBDEFLATE_AVAILABLE
+        decompressed_body = malloc(decompressed_body_size);
 
-    libdeflate_free_decompressor(decoder);
+        // Decode/decompress encoded body and free the decompressor
+        struct libdeflate_decompressor *decompressor = libdeflate_alloc_decompressor();
+        enum libdeflate_result decompress_result = libdeflate_deflate_decompress(
+            decompressor, compressed_body, header.body_size,
+            decompressed_body, decompressed_body_size, NULL
+        );
 
-    if (decode_result != LIBDEFLATE_SUCCESS)
-        return construct_error("failed to decode");
+        libdeflate_free_decompressor(decompressor);
 
-    uint8_t *chunk_ptr = decoded_body;
+        if (decompress_result != LIBDEFLATE_SUCCESS)
+            return construct_error("failed to decode");
+#else
+        return construct_error("Invalid argument for function 'JDX_ReadDatasetFromFile'. Cannot use null argument when not compiled without libdeflate available.");
+#endif
+    }
+
+    uint8_t *chunk_ptr = decompressed_body;
     for (int i = 0; i < header.image_count; i++) {
         // Set and allocate image
         JDXImage img = {
@@ -76,19 +86,19 @@ JDXDataset JDX_ReadDatasetFromFile(FILE *file) {
     return dataset;
 }
 
-JDXDataset JDX_ReadDatasetFromPath(const char *path) {
+JDXDataset JDX_ReadDatasetFromPath(const char *path, void (*external_deflate_decompress)(const uint8_t *compressed, uint8_t *decompressed, size_t compressed_size, size_t decompressed_size)) {
     FILE *file = fopen(path, "rb");
 
     if (file == NULL)
-        return construct_error("cannot open file");
+        return construct_error("Cannot open file.");
 
-    JDXDataset dataset = JDX_ReadDatasetFromFile(file);
+    JDXDataset dataset = JDX_ReadDatasetFromFile(file, external_deflate_decompress);
 
     fclose(file);
     return dataset;
 }
 
-void JDX_WriteDatasetToFile(JDXDataset dataset, FILE *file) {
+void JDX_WriteDatasetToFile(JDXDataset dataset, FILE *file, size_t (*external_deflate_compress)(const uint8_t *uncompressed, uint8_t *compressed, size_t uncompressed_size)) {
     // TODO: Reconsider implentation
     JDXColorType color_type = dataset.images[0].color_type;
     const char *color_signature = NULL;
@@ -132,17 +142,28 @@ void JDX_WriteDatasetToFile(JDXDataset dataset, FILE *file) {
 
     // Must allocate for entire uncompressed size despite it almost certainly being less
     uint8_t *compressed_body = malloc(uncompressed_size);
+    int64_t compressed_size;
 
-    struct libdeflate_compressor *compressor = libdeflate_alloc_compressor(12);
-    int64_t compressed_size = libdeflate_deflate_compress(
-        compressor,
-        uncompressed_body,
-        uncompressed_size,
-        compressed_body,
-        uncompressed_size
-    );
+    if (external_deflate_compress) {
+        compressed_size = (int64_t) external_deflate_compress(uncompressed_body, compressed_body, uncompressed_size);
+    } else {
+#ifdef LIBDEFLATE_AVAILABLE
+        struct libdeflate_compressor *compressor = libdeflate_alloc_compressor(12);
+        compressed_size = (int64_t) libdeflate_deflate_compress(
+            compressor,
+            uncompressed_body,
+            uncompressed_size,
+            compressed_body,
+            uncompressed_size
+        );
 
-    libdeflate_free_compressor(compressor);
+        libdeflate_free_compressor(compressor);
+#else
+        printf("\x1b[31mInvalid argument for function 'JDX_WriteDatasetToFile'. Cannot use null argument when compiled without libdeflate available.\x1b[0m");
+        errno = ENOTSUP;
+        return;
+#endif
+    }
 
     // libdeflate will return 0 if operation failed
     if (compressed_size == 0) {
@@ -158,13 +179,13 @@ void JDX_WriteDatasetToFile(JDXDataset dataset, FILE *file) {
     free(compressed_body);
 }
 
-void JDX_WriteDatasetToPath(JDXDataset dataset, const char *path) {
+void JDX_WriteDatasetToPath(JDXDataset dataset, const char *path, size_t (*external_deflate_compress)(const uint8_t *body, uint8_t *encoded_body, size_t body_size)) {
     FILE *file = fopen(path, "wb");
 
     if (file == NULL)
         return;
 
-    JDX_WriteDatasetToFile(dataset, file);
+    JDX_WriteDatasetToFile(dataset, file, external_deflate_compress);
     fclose(file);
 }
 
