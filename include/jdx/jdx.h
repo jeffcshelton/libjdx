@@ -48,18 +48,18 @@ typedef struct {
     int64_t item_count;
 
     const char *error;
-} JDXObject;
+} JDXDataset;
 
 JDXHeader JDX_ReadHeaderFromFile(FILE *file);
 JDXHeader JDX_ReadHeaderFromPath(const char *path);
 
-JDXObject JDX_ReadObjectFromFile(FILE *file);
-JDXObject JDX_ReadObjectFromPath(const char *path);
+JDXDataset JDX_ReadDatasetFromFile(FILE *file);
+JDXDataset JDX_ReadDatasetFromPath(const char *path);
 
-void JDX_WriteObjectToFile(JDXObject obj, FILE *file);
-void JDX_WriteObjectToPath(JDXObject obj, const char *path);
+void JDX_WriteDatasetToFile(JDXDataset obj, FILE *file);
+void JDX_WriteDatasetToPath(JDXDataset obj, const char *path);
 
-void JDX_FreeObject(JDXObject obj);
+void JDX_FreeDataset(JDXDataset obj);
 
 #ifdef __cplusplus
 }

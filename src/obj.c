@@ -6,23 +6,23 @@
 #include <string.h>
 #include <libdeflate.h>
 
-static inline JDXObject construct_error_object(const char *error) {
-    JDXObject error_obj = {
+static inline JDXDataset construct_error(const char *error_msg) {
+    JDXDataset error_struct = {
         { -1, -1, -1 },
         NULL, NULL, -1,
-        error
+        error_msg
     };
 
-    return error_obj;
+    return error_struct;
 }
 
-JDXObject JDX_ReadObjectFromFile(FILE *file) {
+JDXDataset JDX_ReadDatasetFromFile(FILE *file) {
     JDXHeader header = JDX_ReadHeaderFromFile(file);
 
     if (header.error)
-        return construct_error_object(header.error);
+        return construct_error(header.error);
 
-    JDXObject obj = {
+    JDXDataset dataset = {
         header.version,
         malloc(header.image_count * sizeof(JDXImage)),
         malloc(header.image_count * sizeof(JDXLabel)),
@@ -50,7 +50,7 @@ JDXObject JDX_ReadObjectFromFile(FILE *file) {
     libdeflate_free_decompressor(decoder);
 
     if (decode_result != LIBDEFLATE_SUCCESS)
-        return construct_error_object("failed to decode");
+        return construct_error("failed to decode");
 
     uint8_t *chunk_ptr = decoded_body;
     for (int i = 0; i < header.image_count; i++) {
@@ -69,28 +69,28 @@ JDXObject JDX_ReadObjectFromFile(FILE *file) {
         JDXLabel label = *((int16_t *) chunk_ptr);
         chunk_ptr += sizeof(int16_t);
 
-        obj.images[i] = img;
-        obj.labels[i] = label;
+        dataset.images[i] = img;
+        dataset.labels[i] = label;
     }
 
-    return obj;
+    return dataset;
 }
 
-JDXObject JDX_ReadObjectFromPath(const char *path) {
+JDXDataset JDX_ReadDatasetFromPath(const char *path) {
     FILE *file = fopen(path, "rb");
 
     if (file == NULL)
-        return construct_error_object("cannot open file");
+        return construct_error("cannot open file");
 
-    JDXObject obj = JDX_ReadObjectFromFile(file);
+    JDXDataset dataset = JDX_ReadDatasetFromFile(file);
 
     fclose(file);
-    return obj;
+    return dataset;
 }
 
-void JDX_WriteObjectToFile(JDXObject obj, FILE *file) {
+void JDX_WriteDatasetToFile(JDXDataset dataset, FILE *file) {
     // TODO: Reconsider implentation
-    JDXColorType color_type = obj.images[0].color_type;
+    JDXColorType color_type = dataset.images[0].color_type;
     const char *color_signature = NULL;
     
     if (color_type == JDXColorType_GRAY) {
@@ -106,27 +106,27 @@ void JDX_WriteObjectToFile(JDXObject obj, FILE *file) {
 
     // Write string "JDX" followed by version info
     fwrite("JDX", 1, 3, file);
-    fwrite(&obj.version.major, 1, 1, file);
-    fwrite(&obj.version.minor, 1, 1, file);
-    fwrite(&obj.version.patch, 1, 1, file);
+    fwrite(&dataset.version.major, 1, 1, file);
+    fwrite(&dataset.version.minor, 1, 1, file);
+    fwrite(&dataset.version.patch, 1, 1, file);
 
     // Write the color signature, image width and height, and image count
     fwrite(color_signature, 1, 4, file);
-    fwrite(&obj.images[0].width, sizeof(int16_t), 1, file);
-    fwrite(&obj.images[0].height, sizeof(int16_t), 1, file);
-    fwrite(&obj.item_count, sizeof(int64_t), 1, file);
+    fwrite(&dataset.images[0].width, sizeof(int16_t), 1, file);
+    fwrite(&dataset.images[0].height, sizeof(int16_t), 1, file);
+    fwrite(&dataset.item_count, sizeof(int64_t), 1, file);
 
-    size_t image_size = obj.images[0].width * obj.images[0].height * obj.images[0].color_type;
-    size_t uncompressed_size = obj.item_count * (image_size + 2);
+    size_t image_size = dataset.images[0].width * dataset.images[0].height * dataset.images[0].color_type;
+    size_t uncompressed_size = dataset.item_count * (image_size + 2);
 
     uint8_t *uncompressed_body = malloc(uncompressed_size);
     uint8_t *body_ptr = uncompressed_body;
 
-    for (int i = 0; i < obj.item_count; i++) {
-        memcpy(body_ptr, obj.images[i].data, image_size);
+    for (int i = 0; i < dataset.item_count; i++) {
+        memcpy(body_ptr, dataset.images[i].data, image_size);
         body_ptr += image_size;
 
-        *((JDXLabel *) body_ptr) = obj.labels[i];
+        *((JDXLabel *) body_ptr) = dataset.labels[i];
         body_ptr += sizeof(JDXLabel);
     }
 
@@ -158,20 +158,20 @@ void JDX_WriteObjectToFile(JDXObject obj, FILE *file) {
     free(compressed_body);
 }
 
-void JDX_WriteObjectToPath(JDXObject obj, const char *path) {
+void JDX_WriteDatasetToPath(JDXDataset dataset, const char *path) {
     FILE *file = fopen(path, "wb");
 
     if (file == NULL)
         return;
 
-    JDX_WriteObjectToFile(obj, file);
+    JDX_WriteDatasetToFile(dataset, file);
     fclose(file);
 }
 
-void JDX_FreeObject(JDXObject obj) {
-    for (int i = 0; i < obj.item_count; i++)
-        free(obj.images[i].data);
+void JDX_FreeDataset(JDXDataset dataset) {
+    for (int i = 0; i < dataset.item_count; i++)
+        free(dataset.images[i].data);
 
-    free(obj.images);
-    free(obj.labels);
+    free(dataset.images);
+    free(dataset.labels);
 }

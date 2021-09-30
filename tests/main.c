@@ -13,7 +13,7 @@ typedef struct {
 struct timespec start, end;
 
 // Constant environment variables accessible by tests
-JDXObject example_obj;
+JDXDataset example_dataset;
 
 // Variable set by tests to indicate if they failed
 bool did_fail;
@@ -41,19 +41,19 @@ static void print_fail(void) {
 }
 
 static void setup_testing_environment(void) {
-    example_obj = JDX_ReadObjectFromPath("./res/example.jdx");
+    example_dataset = JDX_ReadDatasetFromPath("./res/example.jdx");
 }
 
 static void destroy_testing_environment(void) {
-    JDX_FreeObject(example_obj);
+    JDX_FreeDataset(example_dataset);
 }
 
 int main(void) {
     // List of tests that need to be executed
     Test tests[] = {
         { Test_ReadHeaderFromPath, "ReadHeaderFromPath" },
-        { Test_ReadObjectFromPath, "ReadObjectFromPath" },
-        { Test_WriteObjectToPath, "WriteObjectToPath" }
+        { Test_ReadDatasetFromPath, "ReadDatasetFromPath" },
+        { Test_WriteDatasetToPath, "WriteDatasetToPath" }
     };
 
     setup_testing_environment();

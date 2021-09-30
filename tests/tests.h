@@ -4,12 +4,12 @@
 #include <stdbool.h>
 
 // Constant testing environment variables
-extern JDXObject example_obj;
+extern JDXDataset example_dataset;
 
 // Variables that tests set
 extern bool did_fail;
 
 // Test definitions
 void Test_ReadHeaderFromPath(void);
-void Test_ReadObjectFromPath(void);
-void Test_WriteObjectToPath(void);
+void Test_ReadDatasetFromPath(void);
+void Test_WriteDatasetToPath(void);
