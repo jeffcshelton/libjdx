@@ -5,8 +5,18 @@ LD_FLAGS = -L/usr/local/lib -ldeflate
 UNAME := $(shell uname)
 ifeq ($(UNAME),Darwin)
 	DYN_EXT = dylib
+
+	ifneq ($(wildcard /usr/local/lib/libdeflate.dylib),)
+		CFLAGS += -DLIBDEFLATE_AVAILABLE
+		LD_FLAGS += -ldeflate
+	endif
 else
 	DYN_EXT = so
+
+	ifneq ($(wildcard /usr/local/lib/libdeflate.so),)
+		CFLAGS += -DLIBDEFLATE_AVAILABLE
+		LD_FLAGS += -ldeflate
+	endif
 endif
 
 SRCS := $(wildcard src/*.c src/**/*.c)
