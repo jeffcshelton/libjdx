@@ -3,11 +3,17 @@
 #include "jdx/jdx.h"
 #include <stdbool.h>
 
+typedef enum {
+    STATE_SUCCESS,
+    STATE_FAILURE,
+    STATE_NOEXECUTE
+} TestState;
+
 // Constant testing environment variables
 extern JDXDataset example_dataset;
 
 // Variables that tests set
-extern bool did_fail;
+extern TestState final_state;
 
 // Test definitions
 void Test_ReadHeaderFromPath(void);
