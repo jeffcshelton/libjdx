@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -std=c17 -Iinclude -I/usr/local/include -Wall -pedantic -O3
-LD_FLAGS = -L/usr/local/lib -ldeflate
+LD_FLAGS = -L/usr/local/lib
 
 UNAME := $(shell uname)
 ifeq ($(UNAME),Darwin)
