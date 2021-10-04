@@ -45,7 +45,7 @@ static void print_na(void) {
 }
 
 static void setup_testing_environment(void) {
-    example_dataset = JDX_ReadDatasetFromPath("./res/example.jdx", NULL);
+    example_dataset = JDX_ReadDatasetFromPath("./res/example.jdx");
 }
 
 static void destroy_testing_environment(void) {

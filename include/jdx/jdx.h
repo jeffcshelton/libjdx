@@ -53,13 +53,13 @@ typedef struct {
 JDXHeader JDX_ReadHeaderFromFile(FILE *file);
 JDXHeader JDX_ReadHeaderFromPath(const char *path);
 
-JDXDataset JDX_ReadDatasetFromFile(FILE *file, void (*external_deflate_decompress)(const uint8_t *compressed, uint8_t *decompressed, size_t compressed_size, size_t decompressed_size));
-JDXDataset JDX_ReadDatasetFromPath(const char *path, void (*external_deflate_decompress)(const uint8_t *compressed, uint8_t *decompressed, size_t compressed_size, size_t decompressed_size));
+JDXDataset JDX_ReadDatasetFromFile(FILE *file);
+JDXDataset JDX_ReadDatasetFromPath(const char *path);
 
-void JDX_WriteDatasetToFile(JDXDataset obj, FILE *file, size_t (*external_deflate_compress)(const uint8_t *uncompressed, uint8_t *compressed, size_t uncompressed_size));
-void JDX_WriteDatasetToPath(JDXDataset obj, const char *path, size_t (*external_deflate_compress)(const uint8_t *uncompressed, uint8_t *compressed, size_t uncompressed_size));
+void JDX_WriteDatasetToFile(JDXDataset dataset, FILE *file);
+void JDX_WriteDatasetToPath(JDXDataset dataset, const char *path);
 
-void JDX_FreeDataset(JDXDataset obj);
+void JDX_FreeDataset(JDXDataset dataset);
 
 #ifdef __cplusplus
 }

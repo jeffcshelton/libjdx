@@ -3,10 +3,8 @@
 #include <errno.h>
 #include <string.h>
 
-#ifdef LIBDEFLATE_AVAILABLE
-
 void Test_ReadDatasetFromPath(void) {
-    JDXDataset dataset = JDX_ReadDatasetFromPath("./res/example.jdx", NULL);
+    JDXDataset dataset = JDX_ReadDatasetFromPath("./res/example.jdx");
 
     final_state = (
         memcmp(&dataset.version, &JDX_VERSION, 3) == 0 &&
@@ -20,9 +18,9 @@ void Test_ReadDatasetFromPath(void) {
 void Test_WriteDatasetToPath(void) {
     errno = 0;
 
-    JDX_WriteDatasetToPath(example_dataset, "./res/temp.jdx", NULL);
+    JDX_WriteDatasetToPath(example_dataset, "./res/temp.jdx");
 
-    JDXDataset read_dataset = JDX_ReadDatasetFromPath("./res/temp.jdx", NULL);
+    JDXDataset read_dataset = JDX_ReadDatasetFromPath("./res/temp.jdx");
     
     final_state = (
         !!errno &&
@@ -35,15 +33,3 @@ void Test_WriteDatasetToPath(void) {
     JDX_FreeDataset(read_dataset);
     remove("./res/temp.jdx");
 }
-
-#else
-
-void Test_ReadDatasetFromPath(void) {
-    final_state = STATE_NOEXECUTE;
-}
-
-void Test_WriteDatasetToPath(void) {
-    final_state = STATE_NOEXECUTE;
-}
-
-#endif
