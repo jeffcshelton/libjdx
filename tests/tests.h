@@ -1,6 +1,6 @@
 #pragma once
 
-#include "jdx/jdx.h"
+#include "libjdx.h"
 #include <stdbool.h>
 
 typedef enum {

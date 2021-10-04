@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -std=c17 -Iinclude -I/usr/local/include -Wall -pedantic -O3
+CFLAGS = -std=c17 -Iinclude -Ilibdeflate -Wall -pedantic -O3
 
 SRCS := $(wildcard src/*.c src/**/*.c)
 OBJS := $(patsubst %.c,%_c.o,$(subst src/,build/,$(SRCS))) libdeflate/libdeflate.a
@@ -14,12 +14,11 @@ libjdx.a: $(OBJS)
 	@ar -r lib/libjdx.a $^
 
 install: libjdx.a
-	rm -rf /usr/local/include/jdx
-	cp -r include/jdx /usr/local/include
+	cp -r include/libjdx.h /usr/local/include
 	cp -r lib/libjdx.a /usr/local/lib
 
 uninstall:
-	rm -rf /usr/local/include/jdx
+	rm -f /usr/local/include/libjdx.h
 	rm -f /usr/local/lib/libjdx.a
 
 tests: $(OBJS) $(TEST_OBJS)

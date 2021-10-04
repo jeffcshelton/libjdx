@@ -1,4 +1,4 @@
-#include "jdx/jdx.h"
+#include "libjdx.h"
 
 #include <stdio.h>
 #include <string.h>
