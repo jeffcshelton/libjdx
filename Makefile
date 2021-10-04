@@ -37,4 +37,5 @@ libdeflate/libdeflate.a:
 	cd libdeflate && make libdeflate.a
 
 clean:
+	@cd libdeflate && make clean
 	@rm -rf build lib bin
