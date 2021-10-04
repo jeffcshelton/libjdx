@@ -2,16 +2,20 @@ CC = gcc
 CFLAGS = -std=c17 -Iinclude -Ilibdeflate -Wall -pedantic -O3
 
 SRCS := $(wildcard src/*.c src/**/*.c)
-OBJS := $(patsubst %.c,%_c.o,$(subst src/,build/,$(SRCS))) libdeflate/libdeflate.a
+OBJS := $(patsubst %.c,%_c.o,$(subst src/,build/,$(SRCS)))
+LIBS = libdeflate/libdeflate.a
 
 TEST_SRCS := $(wildcard tests/*.c)
 TEST_OBJS := $(patsubst %.c,%_c.o,$(subst tests/,build/tests/,$(TEST_SRCS)))
 
 .PHONY: install uninstall tests clean
 
-libjdx.a: $(OBJS)
+libjdx.a: $(OBJS) $(LIBS)
+	@mkdir -p build/libdeflate
+	cd build/libdeflate && ar -x ../../libdeflate/libdeflate.a
+
 	@mkdir -p lib
-	@ar -r lib/libjdx.a $^
+	@ar -r lib/libjdx.a $^ build/libdeflate/*.o
 
 install: libjdx.a
 	cp -r include/libjdx.h /usr/local/include
