@@ -30,14 +30,14 @@ JDXDataset JDX_ReadDatasetFromFile(FILE *file) {
         NULL
     };
 
-    uint8_t *compressed_body = malloc(header.body_size);
-    fread(compressed_body, 1, header.body_size, file);
+    uint8_t *compressed_body = malloc(header.compressed_size);
+    fread(compressed_body, 1, header.compressed_size, file);
 
     size_t image_size = (size_t) header.image_width *
                         (size_t) header.image_height *
                         (size_t) header.color_type;
 
-    size_t decompressed_body_size = (image_size + 2) * (size_t) header.image_count;
+    size_t decompressed_body_size = (image_size + sizeof(JDXLabel)) * (size_t) header.item_count;
     uint8_t *decompressed_body = malloc(decompressed_body_size);
 
     decompressed_body = malloc(decompressed_body_size);
@@ -45,7 +45,7 @@ JDXDataset JDX_ReadDatasetFromFile(FILE *file) {
     // Decode/decompress encoded body and free the decompressor
     struct libdeflate_decompressor *decompressor = libdeflate_alloc_decompressor();
     enum libdeflate_result decompress_result = libdeflate_deflate_decompress(
-        decompressor, compressed_body, header.body_size,
+        decompressor, compressed_body, header.compressed_size,
         decompressed_body, decompressed_body_size, NULL
     );
 
@@ -55,7 +55,7 @@ JDXDataset JDX_ReadDatasetFromFile(FILE *file) {
         return construct_error("failed to decode");
 
     uint8_t *chunk_ptr = decompressed_body;
-    for (int i = 0; i < header.image_count; i++) {
+    for (int i = 0; i < header.item_count; i++) {
         // Set and allocate image
         JDXImage img = {
             malloc(image_size),
@@ -118,13 +118,12 @@ void JDX_WriteDatasetToFile(JDXDataset dataset, FILE *file) {
     fwrite(&dataset.images[0].height, sizeof(int16_t), 1, file);
     fwrite(&dataset.item_count, sizeof(int64_t), 1, file);
 
-    size_t image_size = dataset.images[0].width * dataset.images[0].height * dataset.images[0].color_type;
-    size_t uncompressed_size = dataset.item_count * (image_size + 2);
+    size_t uncompressed_size = (size_t) (image_size + sizeof(JDXLabel)) * (size_t) dataset.header.item_count;
 
     uint8_t *uncompressed_body = malloc(uncompressed_size);
     uint8_t *body_ptr = uncompressed_body;
 
-    for (int i = 0; i < dataset.item_count; i++) {
+    for (int i = 0; i < dataset.header.item_count; i++) {
         memcpy(body_ptr, dataset.images[i].data, image_size);
         body_ptr += image_size;
 
@@ -153,7 +152,7 @@ void JDX_WriteDatasetToFile(JDXDataset dataset, FILE *file) {
         return;
     }
 
-    fwrite(&compressed_size, sizeof(int64_t), 1, file);
+    fwrite(&compressed_size, sizeof(compressed_size), 1, file);
     fwrite(compressed_body, 1, compressed_size, file);
     fflush(file);
 

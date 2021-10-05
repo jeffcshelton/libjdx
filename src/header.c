@@ -29,10 +29,10 @@ JDXHeader JDX_ReadHeaderFromFile(FILE *file) {
     fread(color_signature, sizeof(color_signature), 1, file);
     fread(&header.image_width, sizeof(header.image_width), 1, file);
     fread(&header.image_height, sizeof(header.image_height), 1, file);
-    fread(&header.image_count, sizeof(header.image_count), 1, file);
-    fread(&header.body_size, sizeof(header.body_size), 1, file);
+    fread(&header.item_count, sizeof(header.item_count), 1, file);
+    fread(&header.compressed_size, sizeof(header.compressed_size), 1, file);
 
-    if (header.image_width < 0 || header.image_height < 0 || header.image_count < 0 || header.body_size < 0)
+    if (header.image_width < 0 || header.image_height < 0 || header.item_count < 0 || header.compressed_size < 0)
         return construct_error("invalid header item");
 
     JDXColorType color_type;

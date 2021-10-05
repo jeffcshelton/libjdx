@@ -34,8 +34,8 @@ typedef struct {
     JDXColorType color_type;
 
     int16_t image_width, image_height;
-    int64_t image_count;
-    int64_t body_size;
+    int64_t item_count;
+    int64_t compressed_size;
 
     const char *error;
 } JDXHeader;
