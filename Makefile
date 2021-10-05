@@ -8,9 +8,10 @@ LIBS = libdeflate/libdeflate.a
 TEST_SRCS := $(wildcard tests/*.c)
 TEST_OBJS := $(patsubst %.c,%_c.o,$(subst tests/,build/tests/,$(TEST_SRCS)))
 
-.PHONY: install uninstall tests clean
+.PHONY: libjdx install uninstall tests clean
+libjdx: lib/libjdx.a
 
-libjdx.a: $(OBJS) $(LIBS)
+lib/libjdx.a: $(OBJS) $(LIBS)
 	@mkdir -p build/libdeflate
 	cd build/libdeflate && ar -x ../../libdeflate/libdeflate.a
 
@@ -25,7 +26,7 @@ uninstall:
 	rm -f /usr/local/include/libjdx.h
 	rm -f /usr/local/lib/libjdx.a
 
-tests: $(OBJS) $(TEST_OBJS)
+tests: lib/libjdx.a $(TEST_OBJS)
 	@mkdir -p bin
 	$(CC) $(CFLAGS) $^ -o bin/tests
 

@@ -10,7 +10,7 @@ void Test_ReadHeaderFromPath(void) {
         header.color_type == JDXColorType_RGB &&
         header.image_width == 52 &&
         header.image_height == 52 &&
-        header.image_count == 8 &&
+        header.item_count == 8 &&
         header.error == NULL
     ) ? STATE_SUCCESS : STATE_FAILURE;
 }
