@@ -7,12 +7,10 @@
 #include <libdeflate.h>
 
 static inline JDXDataset construct_error(const char *error_msg) {
-    JDXDataset error_struct = {
-        { -1, -1, -1 },
-        NULL, NULL, -1,
-        error_msg
-    };
+    JDXDataset error_struct;
+    memset(&error_struct, 0, sizeof(JDXDataset));
 
+    error_struct.error = error_msg;
     return error_struct;
 }
 

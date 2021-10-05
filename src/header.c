@@ -6,12 +6,10 @@
 const JDXVersion JDX_VERSION = { 0, 1, 0 };
 
 static inline JDXHeader construct_error(const char *error_msg) {
-    JDXHeader error_struct = {
-        { -1, -1, -1 },
-        -1, -1, -1, -1, -1,
-        error_msg
-    };
+    JDXHeader error_struct;
+    memset(&error_struct, 0, sizeof(error_struct));
 
+    error_struct.error = error_msg;
     return error_struct;
 }
 
