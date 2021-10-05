@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 
 const JDXVersion JDX_VERSION = { 0, 1, 0 };
 
@@ -59,4 +60,33 @@ JDXHeader JDX_ReadHeaderFromPath(const char *path) {
 
     fclose(file);
     return header;
+}
+
+void JDX_WriteHeaderToFile(JDXHeader header, FILE *file) {
+    const char *color_signature = NULL;
+
+    if (header.color_type == JDXColorType_GRAY) {
+        color_signature = "GRAY";
+    } else if (header.color_type == JDXColorType_RGB) {
+        color_signature = "RGB8";
+    } else if (header.color_type == JDXColorType_RGBA) {
+        color_signature = "RGBA";
+    } else {
+        errno = EINVAL;
+        return;
+    }
+
+    // Write string "JDX" to file followed by version info
+    fwrite("JDX", 1, 3, file);
+    fwrite(&header.version.major, 1, 1, file);
+    fwrite(&header.version.minor, 1, 1, file);
+    fwrite(&header.version.patch, 1, 1, file);
+
+    // Write the color signature, image width and height, and image count
+    fwrite(color_signature, 1, 4, file);
+    fwrite(&header.image_width, sizeof(header.image_width), 1, file);
+    fwrite(&header.image_height, sizeof(header.image_height), 1, file);
+    fwrite(&header.item_count, sizeof(header.item_count), 1, file);
+
+    fflush(file);
 }

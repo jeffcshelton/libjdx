@@ -21,19 +21,20 @@ JDXDataset JDX_ReadDatasetFromFile(FILE *file) {
         return construct_error(header.error);
 
     JDXDataset dataset = {
-        header.version,
-        malloc(header.image_count * sizeof(JDXImage)),
-        malloc(header.image_count * sizeof(JDXLabel)),
-        header.image_count,
-        NULL
+        header, // header
+        malloc(header.item_count * sizeof(JDXImage)), // images
+        malloc(header.item_count * sizeof(JDXLabel)), // labels
+        NULL // error
     };
 
     uint8_t *compressed_body = malloc(header.compressed_size);
     fread(compressed_body, 1, header.compressed_size, file);
 
-    size_t image_size = (size_t) header.image_width *
-                        (size_t) header.image_height *
-                        (size_t) header.color_type;
+    size_t image_size = (
+        (size_t) header.image_width *
+        (size_t) header.image_height *
+        (size_t) header.color_type
+    );
 
     size_t decompressed_body_size = (image_size + sizeof(JDXLabel)) * (size_t) header.item_count;
     uint8_t *decompressed_body = malloc(decompressed_body_size);
@@ -89,32 +90,14 @@ JDXDataset JDX_ReadDatasetFromPath(const char *path) {
 }
 
 void JDX_WriteDatasetToFile(JDXDataset dataset, FILE *file) {
-    // TODO: Reconsider implentation
-    JDXColorType color_type = dataset.images[0].color_type;
-    const char *color_signature = NULL;
-    
-    if (color_type == JDXColorType_GRAY) {
-        color_signature = "GRAY";
-    } else if (color_type == JDXColorType_RGB) {
-        color_signature = "RGB8";
-    } else if (color_type == JDXColorType_RGBA) {
-        color_signature = "RGBA";
-    } else {
-        errno = EINVAL;
-        return;
-    }
+    // Write header to the file before the compressed image data
+    JDX_WriteHeaderToFile(dataset.header, file);
 
-    // Write string "JDX" followed by version info
-    fwrite("JDX", 1, 3, file);
-    fwrite(&dataset.version.major, 1, 1, file);
-    fwrite(&dataset.version.minor, 1, 1, file);
-    fwrite(&dataset.version.patch, 1, 1, file);
-
-    // Write the color signature, image width and height, and image count
-    fwrite(color_signature, 1, 4, file);
-    fwrite(&dataset.images[0].width, sizeof(int16_t), 1, file);
-    fwrite(&dataset.images[0].height, sizeof(int16_t), 1, file);
-    fwrite(&dataset.item_count, sizeof(int64_t), 1, file);
+    size_t image_size = (
+        (size_t) dataset.header.image_width *
+        (size_t) dataset.header.image_height *
+        (size_t) dataset.header.color_type
+    );
 
     size_t uncompressed_size = (size_t) (image_size + sizeof(JDXLabel)) * (size_t) dataset.header.item_count;
 
@@ -169,7 +152,7 @@ void JDX_WriteDatasetToPath(JDXDataset dataset, const char *path) {
 }
 
 void JDX_FreeDataset(JDXDataset dataset) {
-    for (int i = 0; i < dataset.item_count; i++)
+    for (int i = 0; i < dataset.header.item_count; i++)
         free(dataset.images[i].data);
 
     free(dataset.images);

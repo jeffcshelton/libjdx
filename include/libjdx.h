@@ -41,11 +41,10 @@ typedef struct {
 } JDXHeader;
 
 typedef struct {
-    JDXVersion version;
+    JDXHeader header;
 
     JDXImage *images;
     JDXLabel *labels;
-    int64_t item_count;
 
     const char *error;
 } JDXDataset;
@@ -55,6 +54,8 @@ JDXHeader JDX_ReadHeaderFromPath(const char *path);
 
 JDXDataset JDX_ReadDatasetFromFile(FILE *file);
 JDXDataset JDX_ReadDatasetFromPath(const char *path);
+
+void JDX_WriteHeaderToFile(JDXHeader header, FILE *file);
 
 void JDX_WriteDatasetToFile(JDXDataset dataset, FILE *file);
 void JDX_WriteDatasetToPath(JDXDataset dataset, const char *path);
