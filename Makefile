@@ -18,7 +18,7 @@ lib/libjdx.a: $(OBJS) $(LIBS)
 	@mkdir -p lib
 	@ar -r lib/libjdx.a $^ build/libdeflate/*.o
 
-install: libjdx.a
+install: lib/libjdx.a
 	cp -r include/libjdx.h /usr/local/include
 	cp -r lib/libjdx.a /usr/local/lib
 
