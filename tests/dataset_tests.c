@@ -48,3 +48,15 @@ void Test_CopyDataset(void) {
 
     JDX_FreeDataset(copy);
 }
+
+void Test_AppendDataset(void) {
+    JDXDataset dset = JDX_CopyDataset(example_dataset);
+    JDX_AppendDataset(&dset, example_dataset);
+
+    final_state = (
+        dset.header.item_count == example_dataset.header.item_count * 2 &&
+        dset.error == NULL
+    ) ? STATE_SUCCESS : STATE_FAILURE;
+
+    JDX_FreeDataset(dset);
+}

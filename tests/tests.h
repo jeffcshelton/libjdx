@@ -20,3 +20,4 @@ void Test_ReadHeaderFromPath(void);
 void Test_ReadDatasetFromPath(void);
 void Test_WriteDatasetToPath(void);
 void Test_CopyDataset(void);
+void Test_AppendDataset(void);

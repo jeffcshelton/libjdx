@@ -182,6 +182,46 @@ JDXDataset JDX_CopyDataset(JDXDataset dataset) {
     return copy;
 }
 
+void JDX_AppendDataset(JDXDataset *dest, JDXDataset src) {
+    // Check for any compatibility errors between the two datasets
+    if (src.header.image_width != dest->header.image_width) {
+        dest->error = "mismatching image widths";
+    } else if (src.header.image_height != dest->header.image_height) {
+        dest->error = "mismatching image heights";
+    } else if (src.header.color_type != dest->header.color_type) {
+        dest->error = "mismatching color types";
+    }
+
+    // Calculate final item count and realloc destination arrays accordingly
+    int64_t new_item_count = dest->header.item_count + src.header.item_count;
+    dest->images = realloc(dest->images, new_item_count * sizeof(JDXImage));
+    dest->labels = realloc(dest->labels, new_item_count * sizeof(JDXLabel));
+
+    size_t image_size = (
+        (size_t) src.header.image_width *
+        (size_t) src.header.image_height *
+        (size_t) src.header.color_type
+    );
+
+    // Copy each image and label individually and store them in dest
+    for (int s = 0, d = dest->header.item_count; s < src.header.item_count; s++, d++) {
+        JDXImage copy_image = {
+            malloc(image_size), // data
+            src.header.image_width, // width
+            src.header.image_height, // height
+            src.header.color_type // color_type
+        };
+
+        memcpy(copy_image.data, src.images[s].data, image_size);
+
+        dest->images[d] = copy_image;
+        dest->labels[d] = src.labels[s];
+    }
+
+    // Set destination item count
+    dest->header.item_count = new_item_count;
+}
+
 void JDX_FreeDataset(JDXDataset dataset) {
     for (int i = 0; i < dataset.header.item_count; i++)
         free(dataset.images[i].data);

@@ -61,6 +61,7 @@ void JDX_WriteDatasetToFile(JDXDataset dataset, FILE *file);
 void JDX_WriteDatasetToPath(JDXDataset dataset, const char *path);
 
 JDXDataset JDX_CopyDataset(JDXDataset dataset);
+void JDX_AppendDataset(JDXDataset *dest, JDXDataset src);
 
 void JDX_FreeDataset(JDXDataset dataset);
 
