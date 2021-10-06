@@ -19,11 +19,10 @@ void Test_WriteDatasetToPath(void) {
     errno = 0;
 
     JDX_WriteDatasetToPath(example_dataset, "./res/temp.jdx");
-
     JDXDataset read_dataset = JDX_ReadDatasetFromPath("./res/temp.jdx");
     
     final_state = (
-        !!errno &&
+        !errno &&
         read_dataset.error == NULL &&
         read_dataset.header.item_count == example_dataset.header.item_count &&
         memcmp(&read_dataset.header.version, &example_dataset.header.version, sizeof(JDXVersion)) == 0 &&
@@ -34,7 +33,7 @@ void Test_WriteDatasetToPath(void) {
             example_dataset.header.image_height *
             example_dataset.header.color_type
         ) == 0
-    ) ? STATE_FAILURE : STATE_SUCCESS;
+    ) ? STATE_SUCCESS : STATE_FAILURE;
 
     JDX_FreeDataset(read_dataset);
     remove("./res/temp.jdx");
