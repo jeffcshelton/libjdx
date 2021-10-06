@@ -6,6 +6,8 @@
 #include <string.h>
 #include <libdeflate.h>
 
+// TODO: For creating, copying, and appending JDXDataset consider using block memory allocation instead of many mallocs
+
 static inline JDXDataset construct_error(const char *error_msg) {
     JDXDataset error_struct;
     memset(&error_struct, 0, sizeof(JDXDataset));
@@ -149,6 +151,35 @@ void JDX_WriteDatasetToPath(JDXDataset dataset, const char *path) {
 
     JDX_WriteDatasetToFile(dataset, file);
     fclose(file);
+}
+
+JDXDataset JDX_CopyDataset(JDXDataset dataset) {
+    JDXDataset copy = {
+        dataset.header, // header
+        malloc(dataset.header.item_count * sizeof(JDXImage)), // images
+        malloc(dataset.header.item_count * sizeof(JDXLabel)), // labels
+        dataset.error // error
+    };
+
+    size_t image_size = (
+        (size_t) dataset.header.image_width *
+        (size_t) dataset.header.image_height *
+        (size_t) dataset.header.color_type
+    );
+
+    for (int i = 0; i < dataset.header.item_count; i++) {
+        JDXImage image_copy = {
+            malloc(image_size),
+            dataset.header.image_width,
+            dataset.header.image_height,
+            dataset.header.color_type
+        };
+
+        memcpy(image_copy.data, dataset.images[i].data, image_size);
+        copy.images[i] = image_copy;
+    }
+
+    return copy;
 }
 
 void JDX_FreeDataset(JDXDataset dataset) {

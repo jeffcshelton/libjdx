@@ -57,7 +57,8 @@ int main(void) {
     Test tests[] = {
         { Test_ReadHeaderFromPath, "ReadHeaderFromPath" },
         { Test_ReadDatasetFromPath, "ReadDatasetFromPath" },
-        { Test_WriteDatasetToPath, "WriteDatasetToPath" }
+        { Test_WriteDatasetToPath, "WriteDatasetToPath" },
+        { Test_CopyDataset, "CopyDataset" }
     };
 
     setup_testing_environment();

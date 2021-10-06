@@ -19,3 +19,4 @@ extern TestState final_state;
 void Test_ReadHeaderFromPath(void);
 void Test_ReadDatasetFromPath(void);
 void Test_WriteDatasetToPath(void);
+void Test_CopyDataset(void);

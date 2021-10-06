@@ -38,3 +38,13 @@ void Test_WriteDatasetToPath(void) {
     JDX_FreeDataset(read_dataset);
     remove("./res/temp.jdx");
 }
+
+void Test_CopyDataset(void) {
+    JDXDataset copy = JDX_CopyDataset(example_dataset);
+
+    final_state = (
+        memcmp(&example_dataset.header, &copy.header, sizeof(JDXHeader)) == 0
+    ) ? STATE_SUCCESS : STATE_FAILURE;
+
+    JDX_FreeDataset(copy);
+}

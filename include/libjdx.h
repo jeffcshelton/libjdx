@@ -60,6 +60,8 @@ void JDX_WriteHeaderToFile(JDXHeader header, FILE *file);
 void JDX_WriteDatasetToFile(JDXDataset dataset, FILE *file);
 void JDX_WriteDatasetToPath(JDXDataset dataset, const char *path);
 
+JDXDataset JDX_CopyDataset(JDXDataset dataset);
+
 void JDX_FreeDataset(JDXDataset dataset);
 
 #ifdef __cplusplus
