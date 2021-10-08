@@ -90,7 +90,7 @@ int main(void) {
     }
 
     // Corresponds to green ASCII color code if failed 0, red otherwise
-    int fail_color_code = 31 + !!(pass_count + na_count);
+    int fail_color_code = 31 + (pass_count + na_count == test_count ? 1 : 0);
 
     printf("\nPassed \x1b[32m%d\x1b[0m tests.\n", pass_count);
     printf("Failed \x1b[%dm%d\x1b[0m tests.\n", fail_color_code, test_count - pass_count - na_count);
