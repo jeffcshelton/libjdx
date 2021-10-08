@@ -87,6 +87,7 @@ void JDX_WriteHeaderToFile(JDXHeader header, FILE *file) {
     fwrite(&header.image_width, sizeof(header.image_width), 1, file);
     fwrite(&header.image_height, sizeof(header.image_height), 1, file);
     fwrite(&header.item_count, sizeof(header.item_count), 1, file);
+    fwrite(&header.compressed_size, sizeof(header.compressed_size), 1, file);
 
     fflush(file);
 }

@@ -92,9 +92,6 @@ JDXDataset JDX_ReadDatasetFromPath(const char *path) {
 }
 
 void JDX_WriteDatasetToFile(JDXDataset dataset, FILE *file) {
-    // Write header to the file before the compressed image data
-    JDX_WriteHeaderToFile(dataset.header, file);
-
     size_t image_size = (
         (size_t) dataset.header.image_width *
         (size_t) dataset.header.image_height *
@@ -116,10 +113,9 @@ void JDX_WriteDatasetToFile(JDXDataset dataset, FILE *file) {
 
     // Must allocate for entire uncompressed size despite it almost certainly being less
     uint8_t *compressed_body = malloc(uncompressed_size);
-    int64_t compressed_size;
 
     struct libdeflate_compressor *compressor = libdeflate_alloc_compressor(12);
-    compressed_size = (int64_t) libdeflate_deflate_compress(
+    dataset.header.compressed_size = (int64_t) libdeflate_deflate_compress(
         compressor,
         uncompressed_body,
         uncompressed_size,
@@ -130,13 +126,13 @@ void JDX_WriteDatasetToFile(JDXDataset dataset, FILE *file) {
     libdeflate_free_compressor(compressor);
 
     // libdeflate will return 0 if operation failed
-    if (compressed_size == 0) {
+    if (dataset.header.compressed_size <= 0) {
         errno = EPROTO;
         return;
     }
 
-    fwrite(&compressed_size, sizeof(compressed_size), 1, file);
-    fwrite(compressed_body, 1, compressed_size, file);
+    JDX_WriteHeaderToFile(dataset.header, file);
+    fwrite(compressed_body, 1, dataset.header.compressed_size, file);
     fflush(file);
 
     free(uncompressed_body);
