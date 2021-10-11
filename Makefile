@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -std=c17 -Iinclude -Ilibdeflate -Wall -pedantic
 
 RELEASE_FLAGS = -DRELEASE -fomit-frame-pointer -O3
-DEBUG_FLAGS = -DDEBUG -g -fno-omit-frame-pointer -fsanitize=address -O0
+DEBUG_FLAGS = -DDEBUG -g -fno-omit-frame-pointer -O0
 
 SRCS := $(wildcard src/*.c src/**/*.c)
 RELEASE_OBJS := $(patsubst src/%.c,build/release/%_c.o,$(SRCS))
