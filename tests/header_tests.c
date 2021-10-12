@@ -3,14 +3,15 @@
 #include <string.h>
 
 void Test_ReadHeaderFromPath(void) {
-    JDXHeader header = JDX_ReadHeaderFromPath("./res/example.jdx");
+    JDXHeader header;
+    JDXError error = JDX_ReadHeaderFromPath(&header, "./res/example.jdx");
 
     final_state = (
+        error == JDXError_NONE &&
         memcmp(&header.version, &JDX_VERSION, 3) == 0 &&
-        header.color_type == JDXColorType_RGB &&
+        header.bit_depth == 24 &&
         header.image_width == 52 &&
         header.image_height == 52 &&
-        header.item_count == 8 &&
-        header.error == NULL
+        header.item_count == 8
     ) ? STATE_SUCCESS : STATE_FAILURE;
 }

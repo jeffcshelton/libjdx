@@ -4,43 +4,48 @@
 #include <string.h>
 
 void Test_ReadDatasetFromPath(void) {
-    JDXDataset dataset = JDX_ReadDatasetFromPath("./res/example.jdx");
+    JDXDataset dataset;
+    JDXError error = JDX_ReadDatasetFromPath(&dataset, "./res/example.jdx");
 
     final_state = (
+        error == JDXError_NONE &&
         memcmp(&dataset.header.version, &JDX_VERSION, 3) == 0 &&
-        dataset.header.item_count == 8 &&
-        dataset.error == NULL
+        dataset.header.item_count == 8
     ) ? STATE_SUCCESS : STATE_FAILURE;
 
-    JDX_FreeDataset(dataset);
+    if (error == JDXError_NONE)
+        JDX_FreeDataset(dataset);
 }
 
 void Test_WriteDatasetToPath(void) {
-    errno = 0;
+    JDXError write_error = JDX_WriteDatasetToPath(example_dataset, "./res/temp.jdx");
 
-    JDX_WriteDatasetToPath(example_dataset, "./res/temp.jdx");
-    JDXDataset read_dataset = JDX_ReadDatasetFromPath("./res/temp.jdx");
-    
+    JDXDataset read_dataset;
+    JDXError read_error = JDX_ReadDatasetFromPath(&read_dataset, "./res/temp.jdx");
+
+    size_t image_size = (
+        (size_t) example_dataset.header.image_width *
+        (size_t) example_dataset.header.image_height *
+        (size_t) example_dataset.header.bit_depth / 8
+    );
+
     final_state = (
-        !errno &&
-        read_dataset.error == NULL &&
+        write_error == JDXError_NONE &&
+        read_error == JDXError_NONE &&
         read_dataset.header.item_count == example_dataset.header.item_count &&
         memcmp(&read_dataset.header.version, &example_dataset.header.version, sizeof(JDXVersion)) == 0 &&
-        memcmp(
-            read_dataset.images[0].data,
-            example_dataset.images[0].data,
-            example_dataset.header.image_width *
-            example_dataset.header.image_height *
-            example_dataset.header.color_type
-        ) == 0
+        memcmp(read_dataset.images[0].data, example_dataset.images[0].data, image_size) == 0
     ) ? STATE_SUCCESS : STATE_FAILURE;
 
-    JDX_FreeDataset(read_dataset);
+    if (read_error == JDXError_NONE)
+        JDX_FreeDataset(read_dataset);
+
     remove("./res/temp.jdx");
 }
 
 void Test_CopyDataset(void) {
-    JDXDataset copy = JDX_CopyDataset(example_dataset);
+    JDXDataset copy;
+    JDX_CopyDataset(example_dataset, &copy);
 
     final_state = (
         memcmp(&example_dataset.header, &copy.header, sizeof(JDXHeader)) == 0
@@ -50,13 +55,15 @@ void Test_CopyDataset(void) {
 }
 
 void Test_AppendDataset(void) {
-    JDXDataset dset = JDX_CopyDataset(example_dataset);
-    JDX_AppendDataset(&dset, example_dataset);
+    JDXDataset copy_dataset;
+    JDX_CopyDataset(example_dataset, &copy_dataset);
+
+    JDXError error = JDX_AppendDataset(&copy_dataset, example_dataset);
 
     final_state = (
-        dset.header.item_count == example_dataset.header.item_count * 2 &&
-        dset.error == NULL
+        error == JDXError_NONE &&
+        copy_dataset.header.item_count == example_dataset.header.item_count * 2
     ) ? STATE_SUCCESS : STATE_FAILURE;
 
-    JDX_FreeDataset(dset);
+    JDX_FreeDataset(copy_dataset);
 }
