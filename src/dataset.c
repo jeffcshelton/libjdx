@@ -188,11 +188,11 @@ void JDX_CopyDataset(JDXDataset src, JDXDataset *dest) {
 JDXError JDX_AppendDataset(JDXDataset* dest, JDXDataset src) {
     // Check for any compatibility errors between the two datasets
     if (src.header.image_width != dest->header.image_width) {
-        return JDXError_UNEQUAL_WIDTH;
+        return JDXError_UNEQUAL_WIDTHS;
     } else if (src.header.image_height != dest->header.image_height) {
-        return JDXError_UNEQUAL_HEIGHT;
+        return JDXError_UNEQUAL_HEIGHTS;
     } else if (src.header.bit_depth != dest->header.bit_depth) {
-        return JDXError_UNEQUAL_BIT_DEPTH;
+        return JDXError_UNEQUAL_BIT_DEPTHS;
     }
 
     // Calculate final item count and realloc destination arrays accordingly
