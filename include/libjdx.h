@@ -23,9 +23,9 @@ typedef enum {
     JDXError_WRITE_FILE,
     JDXError_CORRUPT_FILE,
 
-    JDXError_UNEQUAL_WIDTH,
-    JDXError_UNEQUAL_HEIGHT,
-    JDXError_UNEQUAL_BIT_DEPTH
+    JDXError_UNEQUAL_WIDTHS,
+    JDXError_UNEQUAL_HEIGHTS,
+    JDXError_UNEQUAL_BIT_DEPTHS
 } JDXError;
 
 typedef struct {
