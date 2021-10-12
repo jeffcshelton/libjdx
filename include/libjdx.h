@@ -15,7 +15,7 @@ typedef struct {
 extern const JDXVersion JDX_VERSION;
 
 typedef enum {
-    JDXError_NONE = 0,
+    JDXError_NONE, // must be zero by standard
 
     JDXError_OPEN_FILE,
     JDXError_CLOSE_FILE,
