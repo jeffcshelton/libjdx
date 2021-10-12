@@ -15,29 +15,36 @@ typedef struct {
 extern const JDXVersion JDX_VERSION;
 
 typedef enum {
-    JDXColorType_RGB = 3,
-    JDXColorType_RGBA = 4,
-    JDXColorType_GRAY = 1
-} JDXColorType;
+    JDXError_NONE = 0,
+
+    JDXError_OPEN_FILE,
+    JDXError_CLOSE_FILE,
+    JDXError_READ_FILE,
+    JDXError_WRITE_FILE,
+    JDXError_CORRUPT_FILE,
+
+    JDXError_UNEQUAL_WIDTH,
+    JDXError_UNEQUAL_HEIGHT,
+    JDXError_UNEQUAL_BIT_DEPTH
+} JDXError;
 
 typedef struct {
     uint8_t *data;
 
-    int16_t width, height;
-    JDXColorType color_type;
+    uint16_t width, height;
+    uint8_t bit_depth;
 } JDXImage;
 
 typedef int16_t JDXLabel;
 
 typedef struct {
     JDXVersion version;
-    JDXColorType color_type;
 
-    int16_t image_width, image_height;
-    int64_t item_count;
-    int64_t compressed_size;
+    uint16_t image_width, image_height;
+    uint8_t bit_depth;
 
-    const char *error;
+    uint64_t item_count;
+    uint64_t compressed_size;
 } JDXHeader;
 
 typedef struct {
@@ -45,23 +52,21 @@ typedef struct {
 
     JDXImage *images;
     JDXLabel *labels;
-
-    const char *error;
 } JDXDataset;
 
-JDXHeader JDX_ReadHeaderFromFile(FILE *file);
-JDXHeader JDX_ReadHeaderFromPath(const char *path);
+JDXError JDX_ReadHeaderFromFile(JDXHeader *dest, FILE *file);
+JDXError JDX_ReadHeaderFromPath(JDXHeader *dest, const char *path);
 
-JDXDataset JDX_ReadDatasetFromFile(FILE *file);
-JDXDataset JDX_ReadDatasetFromPath(const char *path);
+JDXError JDX_ReadDatasetFromFile(JDXDataset *dest, FILE *file);
+JDXError JDX_ReadDatasetFromPath(JDXDataset *dest, const char *path);
 
-void JDX_WriteHeaderToFile(JDXHeader header, FILE *file);
+JDXError JDX_WriteHeaderToFile(JDXHeader header, FILE *file);
 
-void JDX_WriteDatasetToFile(JDXDataset dataset, FILE *file);
-void JDX_WriteDatasetToPath(JDXDataset dataset, const char *path);
+JDXError JDX_WriteDatasetToFile(JDXDataset dataset, FILE *file);
+JDXError JDX_WriteDatasetToPath(JDXDataset dataset, const char *path);
 
-JDXDataset JDX_CopyDataset(JDXDataset dataset);
-void JDX_AppendDataset(JDXDataset *dest, JDXDataset src);
+void JDX_CopyDataset(JDXDataset src, JDXDataset *dest);
+JDXError JDX_AppendDataset(JDXDataset *dest, JDXDataset src);
 
 void JDX_FreeDataset(JDXDataset dataset);
 
