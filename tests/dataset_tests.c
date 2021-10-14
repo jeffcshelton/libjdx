@@ -34,7 +34,7 @@ void Test_WriteDatasetToPath(void) {
         read_error == JDXError_NONE &&
         read_dataset.header.item_count == example_dataset.header.item_count &&
         memcmp(&read_dataset.header.version, &example_dataset.header.version, sizeof(JDXVersion)) == 0 &&
-        memcmp(read_dataset.images[0].data, example_dataset.images[0].data, image_size) == 0
+        memcmp(read_dataset.items[0].data, example_dataset.items[0].data, image_size) == 0
     ) ? STATE_SUCCESS : STATE_FAILURE;
 
     if (read_error == JDXError_NONE)

@@ -28,14 +28,16 @@ typedef enum {
     JDXError_UNEQUAL_BIT_DEPTHS
 } JDXError;
 
+typedef uint16_t JDXLabel;
+
 typedef struct {
     uint8_t *data;
 
     uint16_t width, height;
     uint8_t bit_depth;
-} JDXImage;
 
-typedef int16_t JDXLabel;
+    JDXLabel label;
+} JDXItem;
 
 typedef struct {
     JDXVersion version;
@@ -49,9 +51,7 @@ typedef struct {
 
 typedef struct {
     JDXHeader header;
-
-    JDXImage *images;
-    JDXLabel *labels;
+    JDXItem *items;
 } JDXDataset;
 
 JDXError JDX_ReadHeaderFromFile(JDXHeader *dest, FILE *file);

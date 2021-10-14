@@ -42,29 +42,28 @@ JDXError JDX_ReadDatasetFromFile(JDXDataset *dest, FILE *file) {
         return JDXError_CORRUPT_FILE;
 
     dest->header = header;
-    dest->images = malloc(header.item_count * sizeof(JDXImage));
-    dest->labels = malloc(header.item_count * sizeof(JDXLabel));
+    dest->items = malloc(header.item_count * sizeof(JDXItem));
 
     uint8_t *chunk_ptr = decompressed_body;
     for (int i = 0; i < header.item_count; i++) {
-        // Set and allocate image
-        JDXImage image = {
-            malloc(image_size),
-            header.image_width,
-            header.image_height,
-            header.bit_depth
-        };
-
-        // Copy image data into new image buffer and advance chunk ptr
-        memcpy(image.data, chunk_ptr, image_size);
+        // Allocate and copy image data into new image buffer and advance chunk ptr
+        uint8_t *image_data = malloc(image_size);
+        memcpy(image_data, chunk_ptr, image_size);
         chunk_ptr += image_size;
 
         // Type pun end of chunk into label and advance chunk ptr again
         JDXLabel label = *((JDXLabel *) chunk_ptr);
         chunk_ptr += sizeof(JDXLabel);
 
-        dest->images[i] = image;
-        dest->labels[i] = label;
+        JDXItem item = {
+            image_data,
+            header.image_width,
+            header.image_height,
+            header.bit_depth,
+            label
+        };
+
+        dest->items[i] = item;
     }
 
     // Free compressed and decompressed body
@@ -104,10 +103,10 @@ JDXError JDX_WriteDatasetToFile(JDXDataset dataset, FILE *file) {
     uint8_t *body_ptr = uncompressed_body;
 
     for (int i = 0; i < dataset.header.item_count; i++) {
-        memcpy(body_ptr, dataset.images[i].data, image_size);
+        memcpy(body_ptr, dataset.items[i].data, image_size);
         body_ptr += image_size;
 
-        *((JDXLabel *) body_ptr) = dataset.labels[i];
+        *((JDXLabel *) body_ptr) = dataset.items[i].label;
         body_ptr += sizeof(JDXLabel);
     }
 
@@ -163,8 +162,7 @@ JDXError JDX_WriteDatasetToPath(JDXDataset dataset, const char *path) {
 
 void JDX_CopyDataset(JDXDataset src, JDXDataset *dest) {
     dest->header = src.header;
-    dest->images = malloc(src.header.item_count * sizeof(JDXImage));
-    dest->labels = malloc(src.header.item_count * sizeof(JDXLabel));
+    dest->items = malloc(src.header.item_count * sizeof(JDXItem));
 
     size_t image_size = (
         (size_t) src.header.image_width *
@@ -173,15 +171,16 @@ void JDX_CopyDataset(JDXDataset src, JDXDataset *dest) {
     );
 
     for (int i = 0; i < src.header.item_count; i++) {
-        JDXImage image_copy = {
+        JDXItem item_copy = {
             malloc(image_size),
             src.header.image_width,
             src.header.image_height,
-            src.header.bit_depth
+            src.header.bit_depth,
+            src.items[i].label
         };
 
-        memcpy(image_copy.data, src.images[i].data, image_size);
-        dest->images[i] = image_copy;
+        memcpy(item_copy.data, src.items[i].data, image_size);
+        dest->items[i] = item_copy;
     }
 }
 
@@ -197,8 +196,7 @@ JDXError JDX_AppendDataset(JDXDataset* dest, JDXDataset src) {
 
     // Calculate final item count and realloc destination arrays accordingly
     uint64_t new_item_count = dest->header.item_count + src.header.item_count;
-    dest->images = realloc(dest->images, new_item_count * sizeof(JDXImage));
-    dest->labels = realloc(dest->labels, new_item_count * sizeof(JDXLabel));
+    dest->items = realloc(dest->items, new_item_count * sizeof(JDXItem));
 
     size_t image_size = (
         (size_t) src.header.image_width *
@@ -208,17 +206,16 @@ JDXError JDX_AppendDataset(JDXDataset* dest, JDXDataset src) {
 
     // Copy each image and label individually and store them in dest
     for (int s = 0, d = dest->header.item_count; s < src.header.item_count; s++, d++) {
-        JDXImage copy_image = {
-            malloc(image_size), // data
-            src.header.image_width, // width
-            src.header.image_height, // height
-            src.header.bit_depth // bit_depth
+        JDXItem copy_item = {
+            malloc(image_size),
+            src.header.image_width,
+            src.header.image_height,
+            src.header.bit_depth,
+            src.items[s].label
         };
 
-        memcpy(copy_image.data, src.images[s].data, image_size);
-
-        dest->images[d] = copy_image;
-        dest->labels[d] = src.labels[s];
+        memcpy(copy_item.data, src.items[s].data, image_size);
+        dest->items[d] = copy_item;
     }
 
     // Set destination item count
@@ -229,8 +226,7 @@ JDXError JDX_AppendDataset(JDXDataset* dest, JDXDataset src) {
 
 void JDX_FreeDataset(JDXDataset dataset) {
     for (int i = 0; i < dataset.header.item_count; i++)
-        free(dataset.images[i].data);
+        free(dataset.items[i].data);
 
-    free(dataset.images);
-    free(dataset.labels);
+    free(dataset.items);
 }
