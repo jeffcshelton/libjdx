@@ -4,7 +4,7 @@
 #include <string.h>
 #include <errno.h>
 
-const JDXVersion JDX_VERSION = { 0, 1, 0 };
+const JDXVersion JDX_VERSION = { 0, 2, 0 };
 
 JDXError JDX_ReadHeaderFromFile(JDXHeader *dest, FILE *file) {
     char corruption_check[3];
