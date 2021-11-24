@@ -9,49 +9,49 @@ extern "C" {
 #endif
 
 typedef struct {
-    uint8_t major, minor, patch;
+	uint8_t major, minor, patch;
 } JDXVersion;
 
 extern const JDXVersion JDX_VERSION;
 
 typedef enum {
-    JDXError_NONE, // must be zero by standard
+	JDXError_NONE, // must be zero by standard
 
-    JDXError_OPEN_FILE,
-    JDXError_CLOSE_FILE,
-    JDXError_READ_FILE,
-    JDXError_WRITE_FILE,
-    JDXError_CORRUPT_FILE,
+	JDXError_OPEN_FILE,
+	JDXError_CLOSE_FILE,
+	JDXError_READ_FILE,
+	JDXError_WRITE_FILE,
+	JDXError_CORRUPT_FILE,
 
-    JDXError_UNEQUAL_WIDTHS,
-    JDXError_UNEQUAL_HEIGHTS,
-    JDXError_UNEQUAL_BIT_DEPTHS
+	JDXError_UNEQUAL_WIDTHS,
+	JDXError_UNEQUAL_HEIGHTS,
+	JDXError_UNEQUAL_BIT_DEPTHS
 } JDXError;
 
 typedef uint16_t JDXLabel;
 
 typedef struct {
-    uint8_t *data;
+	uint8_t *data;
 
-    uint16_t width, height;
-    uint8_t bit_depth;
+	uint16_t width, height;
+	uint8_t bit_depth;
 
-    JDXLabel label;
+	JDXLabel label;
 } JDXItem;
 
 typedef struct {
-    JDXVersion version;
+	JDXVersion version;
 
-    uint16_t image_width, image_height;
-    uint8_t bit_depth;
+	uint16_t image_width, image_height;
+	uint8_t bit_depth;
 
-    uint64_t item_count;
-    uint64_t compressed_size;
+	uint64_t item_count;
+	uint64_t compressed_size;
 } JDXHeader;
 
 typedef struct {
-    JDXHeader header;
-    JDXItem *items;
+	JDXHeader header;
+	JDXItem *items;
 } JDXDataset;
 
 JDXError JDX_ReadHeaderFromFile(JDXHeader *dest, FILE *file);

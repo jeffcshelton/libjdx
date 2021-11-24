@@ -4,9 +4,9 @@
 #include <stdbool.h>
 
 typedef enum {
-    STATE_SUCCESS,
-    STATE_FAILURE,
-    STATE_NOEXECUTE
+	STATE_SUCCESS,
+	STATE_FAILURE,
+	STATE_NOEXECUTE
 } TestState;
 
 // Constant testing environment variables
