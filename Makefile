@@ -13,6 +13,8 @@ LIBDEFLATE_OBJS = build/libdeflate/*.o
 TEST_SRCS := $(wildcard tests/*.c)
 TEST_OBJS := $(patsubst tests/%.c,build/tests/%_c.o,$(TEST_SRCS))
 
+_ = $(shell git submodule update --init --recursive)
+
 .PHONY: libjdx install uninstall tests clean
 
 libjdx: lib/libjdx.a
