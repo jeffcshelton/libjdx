@@ -8,8 +8,17 @@
 extern "C" {
 #endif
 
+typedef enum {
+	JDXBuildType_DEV,
+	JDXVBuildType_ALPHA,
+	JDXBuildType_BETA,
+	JDXBuildType_RC,
+	JDXBuildType_RELEASE,
+} JDXBuildType;
+
 typedef struct {
 	uint8_t major, minor, patch;
+	JDXBuildType release_type;
 } JDXVersion;
 
 extern const JDXVersion JDX_VERSION;
