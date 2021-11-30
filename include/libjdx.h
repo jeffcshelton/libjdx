@@ -10,7 +10,7 @@ extern "C" {
 
 typedef enum {
 	JDXBuildType_DEV,
-	JDXVBuildType_ALPHA,
+	JDXBuildType_ALPHA,
 	JDXBuildType_BETA,
 	JDXBuildType_RC,
 	JDXBuildType_RELEASE,
