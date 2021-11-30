@@ -23,6 +23,8 @@ typedef struct {
 
 extern const JDXVersion JDX_VERSION;
 
+int32_t JDX_CompareVersions(JDXVersion v1, JDXVersion v2);
+
 typedef enum {
 	JDXError_NONE, // must be zero by standard
 
