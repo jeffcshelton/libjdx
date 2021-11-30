@@ -19,6 +19,7 @@ extern TestState final_state;
 #define TEST_FUNC(name) void Test_##name (void)
 
 // Test definitions
+TEST_FUNC(CompareVersions);
 TEST_FUNC(ReadHeaderFromPath);
 TEST_FUNC(ReadDatasetFromPath);
 TEST_FUNC(WriteDatasetToPath);

@@ -2,6 +2,17 @@
 
 #include <string.h>
 
+TEST_FUNC(CompareVersions) {
+	JDXVersion less_than_current = { 0, 0, 0, JDXBuildType_BETA };
+	JDXVersion greater_than_current = { 255, 255, 255, JDXBuildType_RELEASE };
+
+	final_state = (
+		JDX_CompareVersions(JDX_VERSION, JDX_VERSION) == 0 &&
+		JDX_CompareVersions(less_than_current, JDX_VERSION) == -1 &&
+		JDX_CompareVersions(greater_than_current, JDX_VERSION) == 1
+	) ? STATE_SUCCESS : STATE_FAILURE;	
+}
+
 TEST_FUNC(ReadHeaderFromPath) {
 	JDXHeader header;
 	JDXError error = JDX_ReadHeaderFromPath(&header, "./res/example.jdx");

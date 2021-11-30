@@ -56,6 +56,7 @@ static void destroy_testing_environment(void) {
 
 int main(void) {
 	Test tests[] = {
+		TEST(CompareVersions),
 		TEST(ReadHeaderFromPath),
 		TEST(ReadDatasetFromPath),
 		TEST(WriteDatasetToPath),
