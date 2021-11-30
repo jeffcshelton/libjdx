@@ -46,11 +46,11 @@ static void print_na(void) {
 	printf("\x1b[34mN/A\x1b[0m\n");
 }
 
-static void setup_testing_environment(void) {
+static void init_testing_env(void) {
 	JDX_ReadDatasetFromPath(&example_dataset, "./res/example.jdx");
 }
 
-static void destroy_testing_environment(void) {
+static void destroy_testing_env(void) {
 	JDX_FreeDataset(example_dataset);
 }
 
@@ -64,7 +64,7 @@ int main(void) {
 		TEST(AppendDataset)
 	};
 
-	setup_testing_environment();
+	init_testing_env();
 
 	int test_count = sizeof(tests) / sizeof(Test);
 	int pass_count = 0;
@@ -100,5 +100,5 @@ int main(void) {
 	if (na_count > 0)
 		printf("Did not execute \x1b[34m%d\x1b[0m tests.\n", na_count);
 
-	destroy_testing_environment();
+	destroy_testing_env();
 }
