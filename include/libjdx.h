@@ -18,7 +18,7 @@ typedef enum {
 
 typedef struct {
 	uint8_t major, minor, patch;
-	JDXBuildType release_type;
+	JDXBuildType build_type;
 } JDXVersion;
 
 extern const JDXVersion JDX_VERSION;
