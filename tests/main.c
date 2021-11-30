@@ -5,9 +5,11 @@
 
 // Typedef that all test function signatures must follow
 typedef struct {
-	void (*func)(void);
 	const char *name;
+	void (*func)(void);
 } Test;
+
+#define TEST(name) { #name, Test_ ## name }
 
 // Starting and ending times of tests
 struct timespec start, end;
@@ -53,13 +55,12 @@ static void destroy_testing_environment(void) {
 }
 
 int main(void) {
-	// List of tests that need to be executed
 	Test tests[] = {
-		{ Test_ReadHeaderFromPath, "ReadHeaderFromPath" },
-		{ Test_ReadDatasetFromPath, "ReadDatasetFromPath" },
-		{ Test_WriteDatasetToPath, "WriteDatasetToPath" },
-		{ Test_CopyDataset, "CopyDataset" },
-		{ Test_AppendDataset, "AppendDataset" }
+		TEST(ReadHeaderFromPath),
+		TEST(ReadDatasetFromPath),
+		TEST(WriteDatasetToPath),
+		TEST(CopyDataset),
+		TEST(AppendDataset)
 	};
 
 	setup_testing_environment();

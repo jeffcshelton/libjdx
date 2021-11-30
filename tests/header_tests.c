@@ -2,7 +2,7 @@
 
 #include <string.h>
 
-void Test_ReadHeaderFromPath(void) {
+TEST_FUNC(ReadHeaderFromPath) {
 	JDXHeader header;
 	JDXError error = JDX_ReadHeaderFromPath(&header, "./res/example.jdx");
 

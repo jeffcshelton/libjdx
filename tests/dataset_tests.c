@@ -3,7 +3,7 @@
 #include <errno.h>
 #include <string.h>
 
-void Test_ReadDatasetFromPath(void) {
+TEST_FUNC(ReadDatasetFromPath) {
 	JDXDataset dataset;
 	JDXError error = JDX_ReadDatasetFromPath(&dataset, "./res/example.jdx");
 
@@ -17,7 +17,7 @@ void Test_ReadDatasetFromPath(void) {
 		JDX_FreeDataset(dataset);
 }
 
-void Test_WriteDatasetToPath(void) {
+TEST_FUNC(WriteDatasetToPath) {
 	JDXError write_error = JDX_WriteDatasetToPath(example_dataset, "./res/temp.jdx");
 
 	JDXDataset read_dataset;
@@ -43,7 +43,7 @@ void Test_WriteDatasetToPath(void) {
 	remove("./res/temp.jdx");
 }
 
-void Test_CopyDataset(void) {
+TEST_FUNC(CopyDataset) {
 	JDXDataset copy;
 	JDX_CopyDataset(example_dataset, &copy);
 
@@ -54,7 +54,7 @@ void Test_CopyDataset(void) {
 	JDX_FreeDataset(copy);
 }
 
-void Test_AppendDataset(void) {
+TEST_FUNC(AppendDataset) {
 	JDXDataset copy_dataset;
 	JDX_CopyDataset(example_dataset, &copy_dataset);
 

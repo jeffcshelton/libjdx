@@ -15,9 +15,12 @@ extern JDXDataset example_dataset;
 // Variables that tests set
 extern TestState final_state;
 
+// For declaring new test functions
+#define TEST_FUNC(name) void Test_##name (void)
+
 // Test definitions
-void Test_ReadHeaderFromPath(void);
-void Test_ReadDatasetFromPath(void);
-void Test_WriteDatasetToPath(void);
-void Test_CopyDataset(void);
-void Test_AppendDataset(void);
+TEST_FUNC(ReadHeaderFromPath);
+TEST_FUNC(ReadDatasetFromPath);
+TEST_FUNC(WriteDatasetToPath);
+TEST_FUNC(CopyDataset);
+TEST_FUNC(AppendDataset);
