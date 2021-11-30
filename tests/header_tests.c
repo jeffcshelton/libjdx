@@ -8,7 +8,7 @@ void Test_ReadHeaderFromPath(void) {
 
 	final_state = (
 		error == JDXError_NONE &&
-		memcmp(&header.version, &JDX_VERSION, 3) == 0 &&
+		JDX_CompareVersions(header.version, JDX_VERSION) == 0 &&
 		header.bit_depth == 24 &&
 		header.image_width == 52 &&
 		header.image_height == 52 &&

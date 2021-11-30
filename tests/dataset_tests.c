@@ -9,7 +9,7 @@ void Test_ReadDatasetFromPath(void) {
 
 	final_state = (
 		error == JDXError_NONE &&
-		memcmp(&dataset.header.version, &JDX_VERSION, 3) == 0 &&
+		JDX_CompareVersions(dataset.header.version, JDX_VERSION) == 0 &&
 		dataset.header.item_count == 8
 	) ? STATE_SUCCESS : STATE_FAILURE;
 
@@ -33,7 +33,7 @@ void Test_WriteDatasetToPath(void) {
 		write_error == JDXError_NONE &&
 		read_error == JDXError_NONE &&
 		read_dataset.header.item_count == example_dataset.header.item_count &&
-		memcmp(&read_dataset.header.version, &example_dataset.header.version, sizeof(JDXVersion)) == 0 &&
+		JDX_CompareVersions(read_dataset.header.version, example_dataset.header.version) == 0 &&
 		memcmp(read_dataset.items[0].data, example_dataset.items[0].data, image_size) == 0
 	) ? STATE_SUCCESS : STATE_FAILURE;
 
