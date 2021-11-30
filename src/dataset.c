@@ -17,8 +17,10 @@ JDXError JDX_ReadDatasetFromFile(JDXDataset *dest, FILE *file) {
 	size_t compressed_size = (size_t) header.compressed_size;
 	uint8_t *compressed_body = malloc(compressed_size);
 
-	if (fread(compressed_body, 1, compressed_size, file) != compressed_size)
+	if (fread(compressed_body, 1, compressed_size, file) != compressed_size) {
+		free(compressed_body);
 		return JDXError_READ_FILE;
+	}
 
 	size_t image_size = (
 		(size_t) header.image_width *
@@ -38,8 +40,11 @@ JDXError JDX_ReadDatasetFromFile(JDXDataset *dest, FILE *file) {
 
 	libdeflate_free_decompressor(decompressor);
 
-	if (decompress_result != LIBDEFLATE_SUCCESS)    
+	if (decompress_result != LIBDEFLATE_SUCCESS) {
+		free(compressed_body);
+		free(decompressed_body);
 		return JDXError_CORRUPT_FILE;
+	}
 
 	dest->header = header;
 	dest->items = malloc(header.item_count * sizeof(JDXItem));
@@ -125,20 +130,30 @@ JDXError JDX_WriteDatasetToFile(JDXDataset dataset, FILE *file) {
 	libdeflate_free_compressor(compressor);
 
 	// libdeflate will return 0 if operation failed
-	if (compressed_size == 0)
+	if (compressed_size == 0) {
+		free(uncompressed_body);
+		free(compressed_body);
+
 		return JDXError_WRITE_FILE;
+	}
 
 	dataset.header.compressed_size = (uint64_t) compressed_size;
 	JDXError header_error = JDX_WriteHeaderToFile(dataset.header, file);
 
-	if (header_error != JDXError_NONE)
-		return header_error;
+	if (header_error != JDXError_NONE) {
+		free(uncompressed_body);
+		free(compressed_body);
 
-	if (fwrite(compressed_body, 1, compressed_size, file) != compressed_size)
+		return header_error;
+	}
+		
+
+	if (fwrite(compressed_body, 1, compressed_size, file) != compressed_size || fflush(file) == EOF) {
+		free(uncompressed_body);
+		free(compressed_body);
+
 		return JDXError_WRITE_FILE;
-	
-	if (fflush(file) == EOF)
-		return JDXError_WRITE_FILE;
+	}
 
 	free(uncompressed_body);
 	free(compressed_body);
