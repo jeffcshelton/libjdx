@@ -6,7 +6,7 @@
 
 #define SIGN(x) ((x) > 0 ? 1 : -1)
 
-const JDXVersion JDX_VERSION = { 0, 3, 0, JDXBuildType_ALPHA };
+const JDXVersion JDX_VERSION = { 0, 4, 0, JDXBuildType_DEV };
 
 int32_t JDX_CompareVersions(JDXVersion v1, JDXVersion v2) {
 	if (v1.major != v2.major) {
