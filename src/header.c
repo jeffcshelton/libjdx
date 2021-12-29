@@ -130,6 +130,22 @@ JDXError JDX_WriteHeaderToFile(JDXHeader header, FILE *file) {
 		fwrite(&header.image_width, sizeof(header.image_width), 1, file) != 1 ||
 		fwrite(&header.image_height, sizeof(header.image_height), 1, file) != 1 ||
 		fwrite(&header.bit_depth, sizeof(header.bit_depth), 1, file) != 1 ||
+		fwrite(&header.label_count, sizeof(header.label_count), 1, file) != 1
+	) return JDXError_WRITE_FILE;
+
+	const char *label;
+	int len;
+
+	for (int_fast16_t l = 0; l < header.label_count; l++) {
+		label = header.labels[l];
+		len = strlen(label) + 1;
+
+		if (fwrite(label, sizeof(char), len, file) != len) {
+			return JDXError_WRITE_FILE;
+		}
+	}
+
+	if (
 		fwrite(&header.item_count, sizeof(header.item_count), 1, file) != 1 ||
 		fwrite(&header.compressed_size, sizeof(header.compressed_size), 1, file) != 1
 	) return JDXError_WRITE_FILE;
