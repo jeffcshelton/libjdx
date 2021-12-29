@@ -56,6 +56,9 @@ typedef struct {
 	uint16_t image_width, image_height;
 	uint8_t bit_depth;
 
+	const char **labels;
+	uint16_t label_count;
+
 	uint64_t item_count;
 	uint64_t compressed_size;
 } JDXHeader;

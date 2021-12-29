@@ -3,10 +3,19 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <stdlib.h>
 
 #define SIGN(x) ((x) > 0 ? 1 : -1)
 
 const JDXVersion JDX_VERSION = { 0, 4, 0, JDXBuildType_DEV };
+
+void JDX_FreeHeader(JDXHeader *header) {
+	for (int_least16_t l = 0; l < header->label_count; l++) {
+		free((char *) header->labels[l]);
+	}
+
+	free(header->labels);
+}
 
 int32_t JDX_CompareVersions(JDXVersion v1, JDXVersion v2) {
 	if (v1.major != v2.major) {
