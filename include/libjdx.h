@@ -8,6 +8,8 @@
 extern "C" {
 #endif
 
+#define MAX_LABEL_LEN 128
+
 typedef enum {
 	JDXBuildType_DEV,
 	JDXBuildType_ALPHA,

@@ -51,14 +51,49 @@ JDXError JDX_ReadHeaderFromFile(JDXHeader *dest, FILE *file) {
 		fread(&header.image_width, sizeof(header.image_width), 1, file) != 1 ||
 		fread(&header.image_height, sizeof(header.image_height), 1, file) != 1 ||
 		fread(&header.bit_depth, sizeof(header.bit_depth), 1, file) != 1 ||
+		fread(&header.label_count, sizeof(header.label_count), 1, file) != 1
+	) return JDXError_READ_FILE;
+
+	char **labels = malloc(header.label_count * sizeof(char *));
+
+	char buf[MAX_LABEL_LEN];
+	int i;
+
+	for (int_fast16_t l = 0; l < header.label_count; l++) {
+		i = 0;
+		while (i < MAX_LABEL_LEN && (buf[i++] = getc(file)));
+
+		if (buf[i - 1]) {
+			while (l >= 0) {
+				free(labels[--l]);
+			}
+
+			free(labels);
+			return JDXError_CORRUPT_FILE;
+		}
+
+		char *label = malloc(i);
+		memcpy(label, buf, i);
+
+		labels[l] = label;
+	}
+
+	header.labels = (const char **) labels;
+
+	if (
 		fread(&header.item_count, sizeof(header.item_count), 1, file) != 1 ||
 		fread(&header.compressed_size, sizeof(header.compressed_size), 1, file) != 1
-	) return JDXError_READ_FILE;
+	) {
+		JDX_FreeHeader(&header);
+		return JDXError_READ_FILE;
+	}
 
 	header.version.build_type = (JDXBuildType) build_type;
 
-	if ((header.bit_depth != 8 && header.bit_depth != 24 && header.bit_depth != 32) || (header.version.build_type > JDXBuildType_RELEASE))
+	if ((header.bit_depth != 8 && header.bit_depth != 24 && header.bit_depth != 32) || (header.version.build_type > JDXBuildType_RELEASE)) {
+		JDX_FreeHeader(&header);
 		return JDXError_CORRUPT_FILE;
+	}
 
 	*dest = header;
 	return JDXError_NONE;
