@@ -1,4 +1,4 @@
-CC = gcc
+CC = clang
 CFLAGS = -std=c17 -Iinclude -Ilibdeflate -Wall -pedantic
 
 RELEASE_FLAGS = -DRELEASE -fomit-frame-pointer -O3
