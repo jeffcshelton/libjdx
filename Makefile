@@ -2,7 +2,7 @@ CC = clang
 CFLAGS = -std=c17 -Iinclude -Ilibdeflate -Wall -pedantic
 
 RELEASE_FLAGS = -DRELEASE -fomit-frame-pointer -O3
-DEBUG_FLAGS = -DDEBUG -g -fno-omit-frame-pointer -O0
+DEBUG_FLAGS = -DDEBUG -g -fsanitize=address -fno-omit-frame-pointer -O0
 
 SRCS := $(wildcard src/*.c src/**/*.c)
 RELEASE_OBJS := $(patsubst src/%.c,build/release/%_c.o,$(SRCS))
@@ -31,7 +31,7 @@ uninstall:
 	rm -f /usr/local/include/libjdx.h
 	rm -f /usr/local/lib/libjdx.a
 
-tests: lib/libjdx.a $(TEST_OBJS)
+tests: $(DEBUG_OBJS) $(LIBDEFLATE_OBJS) $(TEST_OBJS)
 	@mkdir -p bin
 	$(CC) $(CFLAGS) $(DEBUG_FLAGS) $^ -o bin/tests
 
