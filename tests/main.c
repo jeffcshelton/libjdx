@@ -26,6 +26,8 @@ static void print_duration(void) {
 #ifdef CLOCK_REALTIME
 	long duration = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000;
 
+	printf(" | ");
+
 	if (duration < 1000) {
 		printf("%ldμs\n", duration);
 	} else if (duration < 1000000) {
@@ -33,16 +35,18 @@ static void print_duration(void) {
 	} else {
 		printf("%fs\n", (double) duration / 1000000.0);
 	}
+#else
+	printf("\n");
 #endif
 }
 
 static void print_pass(void) {
-	printf("\x1b[32mpassed\x1b[0m | ");
+	printf("\x1b[32mpassed\x1b[0m");
 	print_duration();
 }
 
 static void print_fail(void) {
-	printf("\x1b[31mfailed\x1b[0m | ");
+	printf("\x1b[31mfailed\x1b[0m");
 	print_duration();
 }
 
@@ -51,6 +55,10 @@ static void print_na(void) {
 }
 
 static void init_testing_env(void) {
+#ifndef CLOCK_REALTIME
+	printf("\x1b[33m[\x1b[1mWARNING\x1b[0;33m]\x1b[0m CLOCK_REALTIME is not defined in 'time.h'. Timing of tests is disabled.\n\n");
+#endif
+
 	JDX_ReadDatasetFromPath(&example_dataset, "./res/example.jdx");
 }
 
