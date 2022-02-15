@@ -11,8 +11,10 @@ typedef struct {
 
 #define TEST(name) { #name, Test_ ## name }
 
+#ifdef CLOCK_REALTIME
 // Starting and ending times of tests
 struct timespec start, end;
+#endif
 
 // Constant environment variables accessible by tests
 JDXDataset example_dataset;
@@ -21,6 +23,7 @@ JDXDataset example_dataset;
 TestState final_state;
 
 static void print_duration(void) {
+#ifdef CLOCK_REALTIME
 	long duration = (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_nsec - start.tv_nsec) / 1000;
 
 	if (duration < 1000) {
@@ -30,6 +33,7 @@ static void print_duration(void) {
 	} else {
 		printf("%fs\n", (double) duration / 1000000.0);
 	}
+#endif
 }
 
 static void print_pass(void) {
@@ -76,9 +80,15 @@ int main(void) {
 
 		printf("\x1b[33m[\x1b[1m%s\x1b[0;33m]\x1b[0m ", tests[t].name);
 
+#ifdef CLOCK_REALTIME
 		clock_gettime(CLOCK_REALTIME, &start);
+#endif
+
 		tests[t].func();
+
+#ifdef CLOCK_REALTIME
 		clock_gettime(CLOCK_REALTIME, &end);
+#endif
 
 		if (final_state == STATE_SUCCESS) {
 			print_pass();
