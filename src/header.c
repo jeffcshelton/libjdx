@@ -1,4 +1,5 @@
 #include "libjdx.h"
+#include "leio.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -44,14 +45,14 @@ JDXError JDX_ReadHeaderFromFile(JDXHeader *dest, FILE *file) {
 	uint8_t build_type;
 
 	if (
-		fread(&header.version.major, sizeof(header.version.major), 1, file) != 1 ||
-		fread(&header.version.minor, sizeof(header.version.minor), 1, file) != 1 ||
-		fread(&header.version.patch, sizeof(header.version.patch), 1, file) != 1 ||
-		fread(&build_type, sizeof(build_type), 1, file) != 1 ||
-		fread(&header.image_width, sizeof(header.image_width), 1, file) != 1 ||
-		fread(&header.image_height, sizeof(header.image_height), 1, file) != 1 ||
-		fread(&header.bit_depth, sizeof(header.bit_depth), 1, file) != 1 ||
-		fread(&header.label_count, sizeof(header.label_count), 1, file) != 1
+		fread_le(&header.version.major, sizeof(header.version.major), file) == EOF ||
+		fread_le(&header.version.minor, sizeof(header.version.minor), file) == EOF ||
+		fread_le(&header.version.patch, sizeof(header.version.patch), file) == EOF ||
+		fread_le(&build_type, sizeof(build_type), file) == EOF ||
+		fread_le(&header.image_width, sizeof(header.image_width), file) == EOF ||
+		fread_le(&header.image_height, sizeof(header.image_height), file) == EOF ||
+		fread_le(&header.bit_depth, sizeof(header.bit_depth), file) == EOF ||
+		fread_le(&header.label_count, sizeof(header.label_count), file) == EOF
 	) return JDXError_READ_FILE;
 
 	char **labels = malloc(header.label_count * sizeof(char *));
@@ -81,8 +82,8 @@ JDXError JDX_ReadHeaderFromFile(JDXHeader *dest, FILE *file) {
 	header.labels = (const char **) labels;
 
 	if (
-		fread(&header.item_count, sizeof(header.item_count), 1, file) != 1 ||
-		fread(&header.compressed_size, sizeof(header.compressed_size), 1, file) != 1
+		fread_le(&header.item_count, sizeof(header.item_count), file) == EOF ||
+		fread_le(&header.compressed_size, sizeof(header.compressed_size), file) == EOF
 	) {
 		JDX_FreeHeader(&header);
 		return JDXError_READ_FILE;
@@ -123,14 +124,14 @@ JDXError JDX_WriteHeaderToFile(JDXHeader header, FILE *file) {
 
 	// Must write this way to account for alignment of JDXHeader
 	if (
-		fwrite(&header.version.major, sizeof(header.version.major), 1, file) != 1 ||
-		fwrite(&header.version.minor, sizeof(header.version.minor), 1, file) != 1 ||
-		fwrite(&header.version.patch, sizeof(header.version.patch), 1, file) != 1 ||
-		fwrite(&build_type, sizeof(build_type), 1, file) != 1 ||
-		fwrite(&header.image_width, sizeof(header.image_width), 1, file) != 1 ||
-		fwrite(&header.image_height, sizeof(header.image_height), 1, file) != 1 ||
-		fwrite(&header.bit_depth, sizeof(header.bit_depth), 1, file) != 1 ||
-		fwrite(&header.label_count, sizeof(header.label_count), 1, file) != 1
+		fwrite_le(&header.version.major, sizeof(header.version.major), file) == EOF ||
+		fwrite_le(&header.version.minor, sizeof(header.version.minor), file) == EOF ||
+		fwrite_le(&header.version.patch, sizeof(header.version.patch), file) == EOF ||
+		fwrite_le(&build_type, sizeof(build_type), file) == EOF ||
+		fwrite_le(&header.image_width, sizeof(header.image_width), file) == EOF ||
+		fwrite_le(&header.image_height, sizeof(header.image_height), file) == EOF ||
+		fwrite_le(&header.bit_depth, sizeof(header.bit_depth), file) == EOF ||
+		fwrite_le(&header.label_count, sizeof(header.label_count), file) == EOF
 	) return JDXError_WRITE_FILE;
 
 	const char *label;
@@ -146,8 +147,8 @@ JDXError JDX_WriteHeaderToFile(JDXHeader header, FILE *file) {
 	}
 
 	if (
-		fwrite(&header.item_count, sizeof(header.item_count), 1, file) != 1 ||
-		fwrite(&header.compressed_size, sizeof(header.compressed_size), 1, file) != 1
+		fwrite_le(&header.item_count, sizeof(header.item_count), file) == EOF ||
+		fwrite_le(&header.compressed_size, sizeof(header.compressed_size), file) == EOF
 	) return JDXError_WRITE_FILE;
 
 	if (fflush(file) == EOF)
