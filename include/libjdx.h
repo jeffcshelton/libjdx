@@ -78,6 +78,8 @@ JDXError JDX_ReadDatasetFromPath(JDXDataset *dest, const char *path);
 
 JDXError JDX_WriteHeaderToFile(JDXHeader header, FILE *file);
 
+void JDX_FreeHeader(JDXHeader *header);
+
 JDXError JDX_WriteDatasetToFile(JDXDataset dataset, FILE *file);
 JDXError JDX_WriteDatasetToPath(JDXDataset dataset, const char *path);
 
