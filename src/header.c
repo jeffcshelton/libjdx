@@ -15,12 +15,19 @@ JDXHeader *JDX_AllocHeader(void) {
 }
 
 void JDX_FreeHeader(JDXHeader *header) {
-	for (int_least16_t l = 0; l < header->label_count; l++) {
-		free((char *) header->labels[l]);
+	if (header == NULL) {
+		return;
 	}
 
-	free(header->labels);
-}
+	if (header->labels) {
+		if (header->label_count > 0) {
+			for (uint_least16_t l = 0; l < header->label_count; l++) {
+				free((char *) header->labels[l]);
+			}
+		}
+
+		free(header->labels);
+	}
 
 int32_t JDX_CompareVersions(JDXVersion v1, JDXVersion v2) {
 	if (v1.major != v2.major) {
