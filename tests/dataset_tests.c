@@ -13,8 +13,7 @@ TEST_FUNC(ReadDatasetFromPath) {
 		dataset->header->item_count == 8
 	) ? STATE_SUCCESS : STATE_FAILURE;
 
-	if (error == JDXError_NONE)
-		JDX_FreeDataset(dataset);
+	JDX_FreeDataset(dataset);
 }
 
 TEST_FUNC(WriteDatasetToPath) {
@@ -37,9 +36,7 @@ TEST_FUNC(WriteDatasetToPath) {
 		memcmp(read_dataset->items[0].data, example_dataset->items[0].data, image_size) == 0
 	) ? STATE_SUCCESS : STATE_FAILURE;
 
-	if (read_error == JDXError_NONE)
-		JDX_FreeDataset(read_dataset);
-
+	JDX_FreeDataset(read_dataset);
 	remove("./res/temp.jdx");
 }
 
