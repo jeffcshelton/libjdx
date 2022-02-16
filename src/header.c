@@ -80,26 +80,25 @@ JDXError JDX_ReadHeaderFromFile(JDXHeader *dest, FILE *file) {
 	if (memcmp(corruption_check, "JDX", 3) != 0)
 		return JDXError_CORRUPT_FILE;
 
-	JDXHeader header;
 	uint8_t build_type;
 
 	if (
-		fread_le(&header.version.major, sizeof(header.version.major), file) == EOF ||
-		fread_le(&header.version.minor, sizeof(header.version.minor), file) == EOF ||
-		fread_le(&header.version.patch, sizeof(header.version.patch), file) == EOF ||
+		fread_le(&dest->version.major, sizeof(dest->version.major), file) == EOF ||
+		fread_le(&dest->version.minor, sizeof(dest->version.minor), file) == EOF ||
+		fread_le(&dest->version.patch, sizeof(dest->version.patch), file) == EOF ||
 		fread_le(&build_type, sizeof(build_type), file) == EOF ||
-		fread_le(&header.image_width, sizeof(header.image_width), file) == EOF ||
-		fread_le(&header.image_height, sizeof(header.image_height), file) == EOF ||
-		fread_le(&header.bit_depth, sizeof(header.bit_depth), file) == EOF ||
-		fread_le(&header.label_count, sizeof(header.label_count), file) == EOF
+		fread_le(&dest->image_width, sizeof(dest->image_width), file) == EOF ||
+		fread_le(&dest->image_height, sizeof(dest->image_height), file) == EOF ||
+		fread_le(&dest->bit_depth, sizeof(dest->bit_depth), file) == EOF ||
+		fread_le(&dest->label_count, sizeof(dest->label_count), file) == EOF
 	) return JDXError_READ_FILE;
 
-	char **labels = malloc(header.label_count * sizeof(char *));
+	char **labels = malloc(dest->label_count * sizeof(char *));
 
 	char buf[MAX_LABEL_LEN];
 	int i;
 
-	for (int_fast16_t l = 0; l < header.label_count; l++) {
+	for (int_fast16_t l = 0; l < dest->label_count; l++) {
 		i = 0;
 		while (i < MAX_LABEL_LEN && (buf[i++] = getc(file)));
 
@@ -118,24 +117,23 @@ JDXError JDX_ReadHeaderFromFile(JDXHeader *dest, FILE *file) {
 		labels[l] = label;
 	}
 
-	header.labels = (const char **) labels;
+	dest->labels = (const char **) labels;
 
 	if (
-		fread_le(&header.item_count, sizeof(header.item_count), file) == EOF ||
-		fread_le(&header.compressed_size, sizeof(header.compressed_size), file) == EOF
+		fread_le(&dest->item_count, sizeof(dest->item_count), file) == EOF ||
+		fread_le(&dest->compressed_size, sizeof(dest->compressed_size), file) == EOF
 	) {
-		JDX_FreeHeader(&header);
+		free_header_labels(dest);
 		return JDXError_READ_FILE;
 	}
 
-	header.version.build_type = (JDXBuildType) build_type;
+	dest->version.build_type = (JDXBuildType) build_type;
 
-	if ((header.bit_depth != 8 && header.bit_depth != 24 && header.bit_depth != 32) || (header.version.build_type > JDXBuildType_RELEASE)) {
-		JDX_FreeHeader(&header);
+	if ((dest->bit_depth != 8 && dest->bit_depth != 24 && dest->bit_depth != 32) || (dest->version.build_type > JDXBuildType_RELEASE)) {
+		free_header_labels(dest);
 		return JDXError_CORRUPT_FILE;
 	}
 
-	*dest = header;
 	return JDXError_NONE;
 }
 
