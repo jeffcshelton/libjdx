@@ -10,6 +10,10 @@
 
 const JDXVersion JDX_VERSION = { 0, 4, 0, JDXBuildType_DEV };
 
+JDXHeader *JDX_AllocHeader(void) {
+	return malloc(sizeof(JDXHeader));
+}
+
 void JDX_FreeHeader(JDXHeader *header) {
 	for (int_least16_t l = 0; l < header->label_count; l++) {
 		free((char *) header->labels[l]);
