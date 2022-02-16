@@ -14,35 +14,37 @@ JDXHeader *JDX_AllocHeader(void) {
 	return calloc(1, sizeof(JDXHeader));
 }
 
-void JDX_FreeHeader(JDXHeader *header) {
-	if (header == NULL) {
-		return;
-	}
-
+static inline void free_header_labels(JDXHeader *header) {
 	if (header->labels) {
 		if (header->label_count > 0) {
-			for (uint_least16_t l = 0; l < header->label_count; l++) {
+			for (uint_fast16_t l = 0; l < header->label_count; l++) {
 				free((char *) header->labels[l]);
 			}
 		}
 
 		free(header->labels);
 	}
+}
 
+void JDX_FreeHeader(JDXHeader *header) {
+	if (header == NULL) {
+		return;
+	}
+
+	free_header_labels(header);
 	free(header);
 }
 
 void JDX_CopyHeader(JDXHeader *src, JDXHeader *dest) {
-	JDX_FreeHeader(dest);
-
 	dest->version = src->version;
 	dest->image_width = src->image_width;
 	dest->image_height = src->image_height;
 	dest->bit_depth = src->bit_depth;
 
+	free_header_labels(dest);
 	dest->labels = malloc(src->label_count * sizeof(char **));
 
-	for (uint_least16_t l = 0; l < src->label_count; l++) {
+	for (uint_fast16_t l = 0; l < src->label_count; l++) {
 		size_t label_size = strlen(src->labels[l]) + 1;
 
 		dest->labels[l] = malloc(label_size);
