@@ -70,23 +70,25 @@ typedef struct {
 	JDXItem *items;
 } JDXDataset;
 
+JDXHeader *JDX_AllocHeader(void);
+void JDX_FreeHeader(JDXHeader *header);
+
+void JDX_CopyHeader(JDXHeader *src, JDXHeader *dest);
+
 JDXError JDX_ReadHeaderFromFile(JDXHeader *dest, FILE *file);
 JDXError JDX_ReadHeaderFromPath(JDXHeader *dest, const char *path);
+JDXError JDX_WriteHeaderToFile(JDXHeader *header, FILE *file);
+
+JDXDataset *JDX_AllocDataset(void);
+void JDX_FreeDataset(JDXDataset *dataset);
+
+void JDX_CopyDataset(JDXDataset *src, JDXDataset *dest);
+JDXError JDX_AppendDataset(JDXDataset *dest, JDXDataset *src);
 
 JDXError JDX_ReadDatasetFromFile(JDXDataset *dest, FILE *file);
 JDXError JDX_ReadDatasetFromPath(JDXDataset *dest, const char *path);
-
-JDXError JDX_WriteHeaderToFile(JDXHeader header, FILE *file);
-
-void JDX_FreeHeader(JDXHeader *header);
-
-JDXError JDX_WriteDatasetToFile(JDXDataset dataset, FILE *file);
-JDXError JDX_WriteDatasetToPath(JDXDataset dataset, const char *path);
-
-void JDX_CopyDataset(JDXDataset src, JDXDataset *dest);
-JDXError JDX_AppendDataset(JDXDataset *dest, JDXDataset src);
-
-void JDX_FreeDataset(JDXDataset dataset);
+JDXError JDX_WriteDatasetToFile(JDXDataset *dataset, FILE *file);
+JDXError JDX_WriteDatasetToPath(JDXDataset *dataset, const char *path);
 
 #ifdef __cplusplus
 }
