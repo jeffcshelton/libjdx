@@ -12,13 +12,18 @@ JDXDataset *JDX_AllocDataset(void) {
 }
 
 JDXError JDX_ReadDatasetFromFile(JDXDataset *dest, FILE *file) {
-	JDXHeader *header = JDX_AllocHeader();
-	JDXError header_error = JDX_ReadHeaderFromFile(header, file);
+	if (dest->header) {
+		JDX_FreeHeader(dest->header);
+	}
 
-	if (header_error != JDXError_NONE)
+	dest->header = JDX_AllocHeader();
+	JDXError header_error = JDX_ReadHeaderFromFile(dest->header, file);
+
+	if (header_error != JDXError_NONE) {
 		return header_error;
+	}
 
-	size_t compressed_size = (size_t) header->compressed_size;
+	size_t compressed_size = (size_t) dest->header->compressed_size;
 	uint8_t *compressed_body = malloc(compressed_size);
 
 	if (fread(compressed_body, 1, compressed_size, file) != compressed_size) {
@@ -27,12 +32,12 @@ JDXError JDX_ReadDatasetFromFile(JDXDataset *dest, FILE *file) {
 	}
 
 	size_t image_size = (
-		(size_t) header->image_width *
-		(size_t) header->image_height *
-		(size_t) header->bit_depth / 8
+		(size_t) dest->header->image_width *
+		(size_t) dest->header->image_height *
+		(size_t) dest->header->bit_depth / 8
 	);
 
-	size_t decompressed_size = (image_size + sizeof(JDXLabel)) * (size_t) header->item_count;
+	size_t decompressed_size = (image_size + sizeof(JDXLabel)) * (size_t) dest->header->item_count;
 	uint8_t *decompressed_body = malloc(decompressed_size);
 
 	// Decompress encoded body and free the decompressor
@@ -50,13 +55,10 @@ JDXError JDX_ReadDatasetFromFile(JDXDataset *dest, FILE *file) {
 		return JDXError_CORRUPT_FILE;
 	}
 
-	dest->header = JDX_AllocHeader();
-	JDX_CopyHeader(header, dest->header);
-
-	dest->items = malloc(header->item_count * sizeof(JDXItem));
+	dest->items = malloc(dest->header->item_count * sizeof(JDXItem));
 
 	uint8_t *chunk_ptr = decompressed_body;
-	for (int i = 0; i < header->item_count; i++) {
+	for (int i = 0; i < dest->header->item_count; i++) {
 		// Allocate and copy image data into new image buffer and advance chunk ptr
 		uint8_t *image_data = malloc(image_size);
 		memcpy(image_data, chunk_ptr, image_size);
@@ -68,9 +70,9 @@ JDXError JDX_ReadDatasetFromFile(JDXDataset *dest, FILE *file) {
 
 		JDXItem item = {
 			image_data,
-			header->image_width,
-			header->image_height,
-			header->bit_depth,
+			dest->header->image_width,
+			dest->header->image_height,
+			dest->header->bit_depth,
 			label
 		};
 
@@ -87,13 +89,15 @@ JDXError JDX_ReadDatasetFromFile(JDXDataset *dest, FILE *file) {
 JDXError JDX_ReadDatasetFromPath(JDXDataset *dest, const char *path) {
 	FILE *file = fopen(path, "rb");
 
-	if (file == NULL)
+	if (file == NULL) {
 		return JDXError_OPEN_FILE;
+	}
 
 	JDXError error = JDX_ReadDatasetFromFile(dest, file); // Named 'error' but could (and should) be 'JDXError_NONE'
 
-	if (fclose(file) == EOF)
+	if (fclose(file) == EOF) {
 		return JDXError_CLOSE_FILE;
+	}
 
 	return error;
 }
@@ -170,13 +174,15 @@ JDXError JDX_WriteDatasetToFile(JDXDataset *dataset, FILE *file) {
 JDXError JDX_WriteDatasetToPath(JDXDataset *dataset, const char *path) {
 	FILE *file = fopen(path, "wb");
 
-	if (file == NULL)
+	if (file == NULL) {
 		return JDXError_OPEN_FILE;
+	}
 
 	JDXError error = JDX_WriteDatasetToFile(dataset, file);
 	
-	if (fclose(file) == EOF)
+	if (fclose(file) == EOF) {
 		return JDXError_CLOSE_FILE;
+	}
 
 	return error;
 }
@@ -248,8 +254,9 @@ JDXError JDX_AppendDataset(JDXDataset* dest, JDXDataset *src) {
 }
 
 void JDX_FreeDataset(JDXDataset *dataset) {
-	for (int i = 0; i < dataset->header->item_count; i++)
+	for (int i = 0; i < dataset->header->item_count; i++) {
 		free(dataset->items[i].data);
+	}
 
 	JDX_FreeHeader(dataset->header);
 	free(dataset->items);
