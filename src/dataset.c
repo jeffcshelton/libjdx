@@ -243,5 +243,6 @@ void JDX_FreeDataset(JDXDataset dataset) {
 	for (int i = 0; i < dataset.header.item_count; i++)
 		free(dataset.items[i].data);
 
+	JDX_FreeHeader(&dataset.header);
 	free(dataset.items);
 }

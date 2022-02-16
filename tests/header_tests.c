@@ -10,7 +10,7 @@ TEST_FUNC(CompareVersions) {
 		JDX_CompareVersions(JDX_VERSION, JDX_VERSION) == 0 &&
 		JDX_CompareVersions(less_than_current, JDX_VERSION) == -1 &&
 		JDX_CompareVersions(greater_than_current, JDX_VERSION) == 1
-	) ? STATE_SUCCESS : STATE_FAILURE;	
+	) ? STATE_SUCCESS : STATE_FAILURE;
 }
 
 TEST_FUNC(ReadHeaderFromPath) {
@@ -25,4 +25,6 @@ TEST_FUNC(ReadHeaderFromPath) {
 		header.image_height == 52 &&
 		header.item_count == 8
 	) ? STATE_SUCCESS : STATE_FAILURE;
+
+	JDX_FreeHeader(&header);
 }
