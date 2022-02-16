@@ -8,7 +8,7 @@
 // TODO: For creating, copying, and appending JDXDataset consider using block memory allocation instead of many mallocs
 
 JDXDataset *JDX_AllocDataset(void) {
-	return malloc(sizeof(JDXDataset));
+	return calloc(1, sizeof(JDXDataset));
 }
 
 JDXError JDX_ReadDatasetFromFile(JDXDataset *dest, FILE *file) {

@@ -11,7 +11,7 @@
 const JDXVersion JDX_VERSION = { 0, 4, 0, JDXBuildType_DEV };
 
 JDXHeader *JDX_AllocHeader(void) {
-	return malloc(sizeof(JDXHeader));
+	return calloc(1, sizeof(JDXHeader));
 }
 
 void JDX_FreeHeader(JDXHeader *header) {
