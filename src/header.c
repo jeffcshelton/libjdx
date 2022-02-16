@@ -28,6 +28,30 @@ void JDX_FreeHeader(JDXHeader *header) {
 
 		free(header->labels);
 	}
+}
+
+void JDX_CopyHeader(JDXHeader *src, JDXHeader *dest) {
+	JDX_FreeHeader(dest);
+
+	dest->version = src->version;
+	dest->image_width = src->image_width;
+	dest->image_height = src->image_height;
+	dest->bit_depth = src->bit_depth;
+
+	dest->labels = malloc(src->label_count * sizeof(char **));
+
+	for (uint_least16_t l = 0; l < src->label_count; l++) {
+		size_t label_size = strlen(src->labels[l]) + 1;
+
+		dest->labels[l] = malloc(label_size);
+		memcpy((char *) dest->labels[l], src->labels[l], label_size);
+	}
+
+	dest->label_count = src->label_count;
+
+	dest->item_count = src->item_count;
+	dest->compressed_size = src->compressed_size;
+}
 
 int32_t JDX_CompareVersions(JDXVersion v1, JDXVersion v2) {
 	if (v1.major != v2.major) {
