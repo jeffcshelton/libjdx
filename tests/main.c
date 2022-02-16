@@ -17,7 +17,7 @@ struct timespec start, end;
 #endif
 
 // Constant environment variables accessible by tests
-JDXDataset example_dataset;
+JDXDataset *example_dataset = NULL;
 
 // Variable set by tests to indicate if they passed, failed, or not executed (declared in header)
 TestState final_state;
@@ -59,7 +59,8 @@ static void init_testing_env(void) {
 	printf("\x1b[33m[\x1b[1mWARNING\x1b[0;33m]\x1b[0m CLOCK_REALTIME is not defined in 'time.h'. Timing of tests is disabled.\n\n");
 #endif
 
-	JDX_ReadDatasetFromPath(&example_dataset, "./res/example.jdx");
+	example_dataset = JDX_AllocDataset();
+	JDX_ReadDatasetFromPath(example_dataset, "./res/example.jdx");
 }
 
 static void destroy_testing_env(void) {

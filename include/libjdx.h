@@ -66,7 +66,7 @@ typedef struct {
 } JDXHeader;
 
 typedef struct {
-	JDXHeader header;
+	JDXHeader *header;
 	JDXItem *items;
 } JDXDataset;
 

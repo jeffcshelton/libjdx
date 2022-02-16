@@ -28,6 +28,8 @@ void JDX_FreeHeader(JDXHeader *header) {
 
 		free(header->labels);
 	}
+
+	free(header);
 }
 
 void JDX_CopyHeader(JDXHeader *src, JDXHeader *dest) {
@@ -149,31 +151,31 @@ JDXError JDX_ReadHeaderFromPath(JDXHeader *dest, const char *path) {
 	return error;
 }
 
-JDXError JDX_WriteHeaderToFile(JDXHeader header, FILE *file) {
+JDXError JDX_WriteHeaderToFile(JDXHeader *header, FILE *file) {
 	char corruption_check[3] = {'J', 'D', 'X'};
 
 	if (fwrite(corruption_check, 1, sizeof(corruption_check), file) != sizeof(corruption_check))
 		return JDXError_WRITE_FILE;
 
-	uint8_t build_type = (uint8_t) header.version.build_type;
+	uint8_t build_type = (uint8_t) header->version.build_type;
 
 	// Must write this way to account for alignment of JDXHeader
 	if (
-		fwrite_le(&header.version.major, sizeof(header.version.major), file) == EOF ||
-		fwrite_le(&header.version.minor, sizeof(header.version.minor), file) == EOF ||
-		fwrite_le(&header.version.patch, sizeof(header.version.patch), file) == EOF ||
+		fwrite_le(&header->version.major, sizeof(header->version.major), file) == EOF ||
+		fwrite_le(&header->version.minor, sizeof(header->version.minor), file) == EOF ||
+		fwrite_le(&header->version.patch, sizeof(header->version.patch), file) == EOF ||
 		fwrite_le(&build_type, sizeof(build_type), file) == EOF ||
-		fwrite_le(&header.image_width, sizeof(header.image_width), file) == EOF ||
-		fwrite_le(&header.image_height, sizeof(header.image_height), file) == EOF ||
-		fwrite_le(&header.bit_depth, sizeof(header.bit_depth), file) == EOF ||
-		fwrite_le(&header.label_count, sizeof(header.label_count), file) == EOF
+		fwrite_le(&header->image_width, sizeof(header->image_width), file) == EOF ||
+		fwrite_le(&header->image_height, sizeof(header->image_height), file) == EOF ||
+		fwrite_le(&header->bit_depth, sizeof(header->bit_depth), file) == EOF ||
+		fwrite_le(&header->label_count, sizeof(header->label_count), file) == EOF
 	) return JDXError_WRITE_FILE;
 
 	const char *label;
 	int len;
 
-	for (int_fast16_t l = 0; l < header.label_count; l++) {
-		label = header.labels[l];
+	for (int_fast16_t l = 0; l < header->label_count; l++) {
+		label = header->labels[l];
 		len = strlen(label) + 1;
 
 		if (fwrite(label, sizeof(char), len, file) != len) {
@@ -182,8 +184,8 @@ JDXError JDX_WriteHeaderToFile(JDXHeader header, FILE *file) {
 	}
 
 	if (
-		fwrite_le(&header.item_count, sizeof(header.item_count), file) == EOF ||
-		fwrite_le(&header.compressed_size, sizeof(header.compressed_size), file) == EOF
+		fwrite_le(&header->item_count, sizeof(header->item_count), file) == EOF ||
+		fwrite_le(&header->compressed_size, sizeof(header->compressed_size), file) == EOF
 	) return JDXError_WRITE_FILE;
 
 	if (fflush(file) == EOF)
