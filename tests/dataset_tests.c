@@ -42,7 +42,7 @@ TEST_FUNC(WriteDatasetToPath) {
 
 TEST_FUNC(CopyDataset) {
 	JDXDataset *copy = JDX_AllocDataset();
-	JDX_CopyDataset(example_dataset, copy);
+	JDX_CopyDataset(copy, example_dataset);
 
 	// TODO: Replace this memcmp with a comparison of the contents of the headers
 	// final_state = (
@@ -55,15 +55,15 @@ TEST_FUNC(CopyDataset) {
 }
 
 TEST_FUNC(AppendDataset) {
-	JDXDataset *copy_dataset = JDX_AllocDataset();
-	JDX_CopyDataset(example_dataset, copy_dataset);
+	JDXDataset *copy = JDX_AllocDataset();
+	JDX_CopyDataset(copy, example_dataset);
 
-	JDXError error = JDX_AppendDataset(copy_dataset, example_dataset);
+	JDXError error = JDX_AppendDataset(copy, example_dataset);
 
 	final_state = (
 		error == JDXError_NONE &&
-		copy_dataset->header->item_count == example_dataset->header->item_count * 2
+		copy->header->item_count == example_dataset->header->item_count * 2
 	) ? STATE_SUCCESS : STATE_FAILURE;
 
-	JDX_FreeDataset(copy_dataset);
+	JDX_FreeDataset(copy);
 }

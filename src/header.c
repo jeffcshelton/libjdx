@@ -35,7 +35,7 @@ void JDX_FreeHeader(JDXHeader *header) {
 	free(header);
 }
 
-void JDX_CopyHeader(JDXHeader *src, JDXHeader *dest) {
+void JDX_CopyHeader(JDXHeader *dest, JDXHeader *src) {
 	dest->version = src->version;
 	dest->image_width = src->image_width;
 	dest->image_height = src->image_height;

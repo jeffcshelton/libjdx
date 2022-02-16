@@ -187,9 +187,9 @@ JDXError JDX_WriteDatasetToPath(JDXDataset *dataset, const char *path) {
 	return error;
 }
 
-void JDX_CopyDataset(JDXDataset *src, JDXDataset *dest) {
+void JDX_CopyDataset(JDXDataset *dest, JDXDataset *src) {
 	dest->header = JDX_AllocHeader();
-	JDX_CopyHeader(src->header, dest->header);
+	JDX_CopyHeader(dest->header, src->header);
 
 	dest->items = malloc(src->header->item_count * sizeof(JDXItem));
 
