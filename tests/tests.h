@@ -21,6 +21,7 @@ extern TestState final_state;
 // Test definitions
 TEST_FUNC(CompareVersions);
 TEST_FUNC(ReadHeaderFromPath);
+TEST_FUNC(CopyHeader);
 TEST_FUNC(ReadDatasetFromPath);
 TEST_FUNC(WriteDatasetToPath);
 TEST_FUNC(CopyDataset);

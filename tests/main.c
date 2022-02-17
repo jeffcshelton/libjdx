@@ -71,6 +71,7 @@ int main(void) {
 	Test tests[] = {
 		TEST(CompareVersions),
 		TEST(ReadHeaderFromPath),
+		TEST(CopyHeader),
 		TEST(ReadDatasetFromPath),
 		TEST(WriteDatasetToPath),
 		TEST(CopyDataset),

@@ -28,3 +28,16 @@ TEST_FUNC(ReadHeaderFromPath) {
 
 	JDX_FreeHeader(header);
 }
+
+TEST_FUNC(CopyHeader) {
+	JDXHeader *copy = JDX_AllocHeader();
+	JDX_CopyHeader(copy, example_dataset->header);
+
+	final_state = (
+		copy->image_width == example_dataset->header->image_width &&
+		copy->image_height == example_dataset->header->image_height &&
+		copy->bit_depth == example_dataset->header->bit_depth
+	) ? STATE_SUCCESS : STATE_FAILURE;
+
+	JDX_FreeHeader(copy);
+}
