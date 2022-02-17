@@ -44,12 +44,24 @@ TEST_FUNC(CopyDataset) {
 	JDXDataset *copy = JDX_AllocDataset();
 	JDX_CopyDataset(copy, example_dataset);
 
-	// TODO: Replace this memcmp with a comparison of the contents of the headers
-	// final_state = (
-	// 	memcmp(&example_dataset->header, &copy->header, sizeof(JDXHeader)) == 0
-	// ) ? STATE_SUCCESS : STATE_FAILURE;
+	if (copy->header->item_count == example_dataset->header->item_count) {
+		size_t image_size = (
+			(size_t) example_dataset->header->image_width *
+			(size_t) example_dataset->header->image_height *
+			(size_t) example_dataset->header->bit_depth / 8
+		);
 
-	final_state = STATE_SUCCESS;
+		final_state = STATE_SUCCESS;
+
+		for (uint_fast64_t i = 0; i < copy->header->item_count; i++) {
+			if (memcmp(copy->items[i].data, example_dataset->items[i].data, image_size) != 0) {
+				final_state = STATE_FAILURE;
+				break;
+			}
+		}
+	} else {
+		final_state = STATE_FAILURE;
+	}
 
 	JDX_FreeDataset(copy);
 }
