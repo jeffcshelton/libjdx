@@ -8,19 +8,20 @@
 extern "C" {
 #endif
 
-#define MAX_LABEL_LEN 128
+#define JDX_MAX_LABEL_LEN 128
 
-typedef enum {
-	JDXBuildType_DEV,
-	JDXBuildType_ALPHA,
-	JDXBuildType_BETA,
-	JDXBuildType_RC,
-	JDXBuildType_RELEASE,
-} JDXBuildType;
+#define JDX_BUILD_DEV 0
+#define JDX_BUILD_ALPHA 1
+#define JDX_BUILD_BETA 2
+#define JDX_BUILD_RC 3
+#define JDX_BUILD_RELEASE 4
 
-typedef struct {
-	uint8_t major, minor, patch;
-	JDXBuildType build_type;
+typedef union {
+	struct {
+		uint8_t build_type, patch, minor, major;
+	};
+
+	int32_t raw;
 } JDXVersion;
 
 extern const JDXVersion JDX_VERSION;
