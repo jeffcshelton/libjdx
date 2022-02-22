@@ -3,13 +3,13 @@
 #include <string.h>
 
 TEST_FUNC(CompareVersions) {
-	JDXVersion less_than_current = { 0, 0, 0, JDXBuildType_BETA };
-	JDXVersion greater_than_current = { 255, 255, 255, JDXBuildType_RELEASE };
+	JDXVersion less_than_current = {{ JDX_BUILD_DEV, 0x00, 0x00, 0x00 }};
+	JDXVersion greater_than_current = {{ JDX_BUILD_RELEASE, 0x7F, 0x7F, 0x7F }};
 
 	final_state = (
 		JDX_CompareVersions(JDX_VERSION, JDX_VERSION) == 0 &&
-		JDX_CompareVersions(less_than_current, JDX_VERSION) == -1 &&
-		JDX_CompareVersions(greater_than_current, JDX_VERSION) == 1
+		JDX_CompareVersions(less_than_current, JDX_VERSION) < 0 &&
+		JDX_CompareVersions(greater_than_current, JDX_VERSION) > 0
 	) ? STATE_SUCCESS : STATE_FAILURE;
 }
 
