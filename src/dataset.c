@@ -254,6 +254,10 @@ JDXError JDX_AppendDataset(JDXDataset* dest, JDXDataset *src) {
 }
 
 void JDX_FreeDataset(JDXDataset *dataset) {
+	if (dataset == NULL) {
+		return;
+	}
+
 	for (int i = 0; i < dataset->header->item_count; i++) {
 		free(dataset->items[i].data);
 	}
