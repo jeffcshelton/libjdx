@@ -54,65 +54,82 @@ void JDX_CopyHeader(JDXHeader *dest, JDXHeader *src) {
 }
 
 JDXError JDX_ReadHeaderFromFile(JDXHeader *dest, FILE *file) {
+	JDXError error = JDXError_NONE;
+
 	char corruption_check[3];
+	char label_buffer[JDX_MAX_LABEL_LEN];
+	JDXHeader header = { .labels = NULL };
 
-	if (fread(corruption_check, 1, sizeof(corruption_check), file) != sizeof(corruption_check))
-		return JDXError_READ_FILE;
-
-	if (memcmp(corruption_check, "JDX", 3) != 0)
-		return JDXError_CORRUPT_FILE;
+	if (fread_le(corruption_check, sizeof(corruption_check), file) == EOF) {
+		error = JDXError_READ_FILE;
+		goto destruct_ReadHeaderFromFile;
+	} else if (memcmp(corruption_check, "JDX", 3) != 0) {
+		error = JDXError_CORRUPT_FILE;
+		goto destruct_ReadHeaderFromFile;
+	}
 
 	if (
-		fread_le(&dest->version.major, sizeof(dest->version.major), file) == EOF ||
-		fread_le(&dest->version.minor, sizeof(dest->version.minor), file) == EOF ||
-		fread_le(&dest->version.patch, sizeof(dest->version.patch), file) == EOF ||
-		fread_le(&dest->version.build_type, sizeof(dest->version.build_type), file) == EOF ||
-		fread_le(&dest->image_width, sizeof(dest->image_width), file) == EOF ||
-		fread_le(&dest->image_height, sizeof(dest->image_height), file) == EOF ||
-		fread_le(&dest->bit_depth, sizeof(dest->bit_depth), file) == EOF ||
-		fread_le(&dest->label_count, sizeof(dest->label_count), file) == EOF
-	) return JDXError_READ_FILE;
+		fread_le(&header.version.major, sizeof(header.version.major), file) == EOF ||
+		fread_le(&header.version.minor, sizeof(header.version.minor), file) == EOF ||
+		fread_le(&header.version.patch, sizeof(header.version.patch), file) == EOF ||
+		fread_le(&header.version.build_type, sizeof(header.version.build_type), file) == EOF ||
+		fread_le(&header.image_width, sizeof(header.image_width), file) == EOF ||
+		fread_le(&header.image_height, sizeof(header.image_height), file) == EOF ||
+		fread_le(&header.bit_depth, sizeof(header.bit_depth), file) == EOF ||
+		fread_le(&header.label_count, sizeof(header.label_count), file) == EOF
+	) {
+		goto destruct_ReadHeaderFromFile;
+		return JDXError_READ_FILE;
+	}
 
-	char **labels = malloc(dest->label_count * sizeof(char *));
+	// TODO: Consider doing this with only 2 mallocs; it may speed it up
+	header.labels = calloc(header.label_count, sizeof(char *));
 
-	char buf[JDX_MAX_LABEL_LEN];
-	int i;
+	for (int_fast16_t l = 0; l < header.label_count; l++) {
+		int i = 0;
+		while (i < JDX_MAX_LABEL_LEN && (label_buffer[i++] = getc(file)));
 
-	for (int_fast16_t l = 0; l < dest->label_count; l++) {
-		i = 0;
-		while (i < JDX_MAX_LABEL_LEN && (buf[i++] = getc(file)));
-
-		if (buf[i - 1]) {
-			while (l >= 0) {
-				free(labels[--l]);
-			}
-
-			free(labels);
-			return JDXError_CORRUPT_FILE;
+		if (label_buffer[i - 1]) {
+			error = JDXError_CORRUPT_FILE;
+			goto destruct_ReadHeaderFromFile;
 		}
 
-		char *label = malloc(i);
-		memcpy(label, buf, i);
-
-		labels[l] = label;
+		header.labels[l] = malloc(i);
+		memcpy((char *) header.labels[l], label_buffer, i);
 	}
-
-	dest->labels = (const char **) labels;
 
 	if (
-		fread_le(&dest->item_count, sizeof(dest->item_count), file) == EOF ||
-		fread_le(&dest->compressed_size, sizeof(dest->compressed_size), file) == EOF
+		fread_le(&header.item_count, sizeof(header.item_count), file) == EOF ||
+		fread_le(&header.compressed_size, sizeof(header.compressed_size), file) == EOF
 	) {
-		free_header_labels(dest);
-		return JDXError_READ_FILE;
+		error = JDXError_READ_FILE;
+		goto destruct_ReadHeaderFromFile;
 	}
 
-	if ((dest->bit_depth != 8 && dest->bit_depth != 24 && dest->bit_depth != 32) || (dest->version.build_type > JDX_BUILD_RELEASE)) {
-		free_header_labels(dest);
-		return JDXError_CORRUPT_FILE;
+	if ((header.bit_depth != 8 && header.bit_depth != 24 && header.bit_depth != 32) || (header.version.build_type > JDX_BUILD_RELEASE)) {
+		error = JDXError_CORRUPT_FILE;
+		printf("Bit depth: %d / build_type: %d\n", header.bit_depth, header.version.build_type);
+		goto destruct_ReadHeaderFromFile;
 	}
 
-	return JDXError_NONE;
+destruct_ReadHeaderFromFile:
+	if (error) {
+		if (header.labels) {
+			for (int_fast16_t l = 0; l < header.label_count; l++) {
+				free((char *) header.labels[l]);
+			}
+
+			free(header.labels);
+		}
+	} else {
+		if (dest && dest->labels) {
+			free_header_labels(dest);
+		}
+
+		*dest = header;
+	}
+
+	return error;
 }
 
 JDXError JDX_ReadHeaderFromPath(JDXHeader *dest, const char *path) {
@@ -132,8 +149,9 @@ JDXError JDX_ReadHeaderFromPath(JDXHeader *dest, const char *path) {
 JDXError JDX_WriteHeaderToFile(JDXHeader *header, FILE *file) {
 	char corruption_check[3] = {'J', 'D', 'X'};
 
-	if (fwrite(corruption_check, 1, sizeof(corruption_check), file) != sizeof(corruption_check))
+	if (fwrite(corruption_check, 1, sizeof(corruption_check), file) != sizeof(corruption_check)) {
 		return JDXError_WRITE_FILE;
+	}
 
 	// Must write this way to account for alignment of JDXHeader
 	if (
@@ -145,16 +163,15 @@ JDXError JDX_WriteHeaderToFile(JDXHeader *header, FILE *file) {
 		fwrite_le(&header->image_height, sizeof(header->image_height), file) == EOF ||
 		fwrite_le(&header->bit_depth, sizeof(header->bit_depth), file) == EOF ||
 		fwrite_le(&header->label_count, sizeof(header->label_count), file) == EOF
-	) return JDXError_WRITE_FILE;
-
-	const char *label;
-	int len;
+	) {
+		return JDXError_WRITE_FILE;
+	}
 
 	for (int_fast16_t l = 0; l < header->label_count; l++) {
-		label = header->labels[l];
-		len = strlen(label) + 1;
+		char *label = (char *) header->labels[l];
+		int len = strlen(label) + 1;
 
-		if (fwrite(label, sizeof(char), len, file) != len) {
+		if (fwrite_le(label, len, file) == EOF) {
 			return JDXError_WRITE_FILE;
 		}
 	}
@@ -162,10 +179,13 @@ JDXError JDX_WriteHeaderToFile(JDXHeader *header, FILE *file) {
 	if (
 		fwrite_le(&header->item_count, sizeof(header->item_count), file) == EOF ||
 		fwrite_le(&header->compressed_size, sizeof(header->compressed_size), file) == EOF
-	) return JDXError_WRITE_FILE;
-
-	if (fflush(file) == EOF)
+	) {
 		return JDXError_WRITE_FILE;
+	}
+
+	if (fflush(file) == EOF) {
+		return JDXError_WRITE_FILE;
+	}
 
 	return JDXError_NONE;
 }
