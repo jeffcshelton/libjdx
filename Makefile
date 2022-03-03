@@ -1,5 +1,5 @@
 CC = clang
-CFLAGS = -std=c17 -Iinclude -Ilibdeflate -Wall -pedantic
+CFLAGS = -std=c11 -Iinclude -Ilibdeflate -Wall -pedantic
 
 RELEASE_FLAGS = -DRELEASE -fomit-frame-pointer -O3
 DEBUG_FLAGS = -DDEBUG -g -fsanitize=address -fno-omit-frame-pointer -O0
