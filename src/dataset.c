@@ -1,5 +1,6 @@
 #include "trycatch.h"
 #include "libjdx.h"
+#include "leio.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,8 +29,12 @@ JDXError JDX_ReadDatasetFromFile(JDXDataset *dest, FILE *file) {
 			THROW(header_error);
 		}
 
-		size_t compressed_size = (size_t) header->compressed_size;
-		compressed_body = malloc(compressed_size);
+		uint64_t compressed_size;
+		if (fread(&compressed_size, sizeof(compressed_size), 1, file) != 1) {
+			THROW(JDXError_READ_FILE);
+		}
+
+		compressed_body = malloc((size_t) compressed_size);
 
 		if (fread(compressed_body, 1, compressed_size, file) != compressed_size) {
 			THROW(JDXError_READ_FILE);
@@ -173,14 +178,17 @@ JDXError JDX_WriteDatasetToFile(JDXDataset *dataset, FILE *file) {
 			THROW(JDXError_WRITE_FILE);
 		}
 
-		dataset->header->compressed_size = (uint64_t) compressed_size;
 		JDXError header_error = JDX_WriteHeaderToFile(dataset->header, file);
 
 		if (header_error) {
 			THROW(header_error);
 		}
 
-		if (fwrite(compressed_body, 1, compressed_size, file) != compressed_size || fflush(file) == EOF) {
+		if (
+			fwrite(&compressed_size, sizeof(compressed_size), 1, file) != 1 ||
+			fwrite(compressed_body, 1, compressed_size, file) != compressed_size ||
+			fflush(file) == EOF
+		) {
 			THROW(JDXError_WRITE_FILE);
 		}
 	} CATCH(error) {

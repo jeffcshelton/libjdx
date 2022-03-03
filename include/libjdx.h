@@ -65,7 +65,6 @@ typedef struct {
 	uint16_t label_count;
 
 	uint64_t item_count;
-	uint64_t compressed_size;
 } JDXHeader;
 
 typedef struct {
