@@ -1,3 +1,4 @@
+#include "trycatch.h"
 #include "libjdx.h"
 #include "leio.h"
 
@@ -54,66 +55,52 @@ void JDX_CopyHeader(JDXHeader *dest, JDXHeader *src) {
 }
 
 JDXError JDX_ReadHeaderFromFile(JDXHeader *dest, FILE *file) {
-	JDXError error = JDXError_NONE;
-
 	char corruption_check[3];
 	char label_buffer[JDX_MAX_LABEL_LEN];
 	JDXHeader header = { .labels = NULL };
 
-	if (fread_le(corruption_check, sizeof(corruption_check), file) == EOF) {
-		error = JDXError_READ_FILE;
-		goto destruct_ReadHeaderFromFile;
-	} else if (memcmp(corruption_check, "JDX", 3) != 0) {
-		error = JDXError_CORRUPT_FILE;
-		goto destruct_ReadHeaderFromFile;
-	}
-
-	if (
-		fread_le(&header.version.major, sizeof(header.version.major), file) == EOF ||
-		fread_le(&header.version.minor, sizeof(header.version.minor), file) == EOF ||
-		fread_le(&header.version.patch, sizeof(header.version.patch), file) == EOF ||
-		fread_le(&header.version.build_type, sizeof(header.version.build_type), file) == EOF ||
-		fread_le(&header.image_width, sizeof(header.image_width), file) == EOF ||
-		fread_le(&header.image_height, sizeof(header.image_height), file) == EOF ||
-		fread_le(&header.bit_depth, sizeof(header.bit_depth), file) == EOF ||
-		fread_le(&header.label_count, sizeof(header.label_count), file) == EOF
-	) {
-		goto destruct_ReadHeaderFromFile;
-		return JDXError_READ_FILE;
-	}
-
-	// TODO: Consider doing this with only 2 mallocs; it may speed it up
-	header.labels = calloc(header.label_count, sizeof(char *));
-
-	for (int_fast16_t l = 0; l < header.label_count; l++) {
-		int i = 0;
-		while (i < JDX_MAX_LABEL_LEN && (label_buffer[i++] = getc(file)));
-
-		if (label_buffer[i - 1]) {
-			error = JDXError_CORRUPT_FILE;
-			goto destruct_ReadHeaderFromFile;
+	TRY {
+		if (fread_le(corruption_check, sizeof(corruption_check), file) == EOF) {
+			THROW(JDXError_READ_FILE);
+		} else if (memcmp(corruption_check, "JDX", 3) != 0) {
+			THROW(JDXError_CORRUPT_FILE);
 		}
 
-		header.labels[l] = malloc(i);
-		memcpy((char *) header.labels[l], label_buffer, i);
-	}
+		if (
+			fread_le(&header.version.major, sizeof(header.version.major), file) == EOF ||
+			fread_le(&header.version.minor, sizeof(header.version.minor), file) == EOF ||
+			fread_le(&header.version.patch, sizeof(header.version.patch), file) == EOF ||
+			fread_le(&header.version.build_type, sizeof(header.version.build_type), file) == EOF ||
+			fread_le(&header.image_width, sizeof(header.image_width), file) == EOF ||
+			fread_le(&header.image_height, sizeof(header.image_height), file) == EOF ||
+			fread_le(&header.bit_depth, sizeof(header.bit_depth), file) == EOF ||
+			fread_le(&header.label_count, sizeof(header.label_count), file) == EOF
+		) { THROW(JDXError_READ_FILE); }
 
-	if (
-		fread_le(&header.item_count, sizeof(header.item_count), file) == EOF ||
-		fread_le(&header.compressed_size, sizeof(header.compressed_size), file) == EOF
-	) {
-		error = JDXError_READ_FILE;
-		goto destruct_ReadHeaderFromFile;
-	}
+		// TODO: Consider doing this with only 2 mallocs; it may speed it up
+		header.labels = calloc(header.label_count, sizeof(char *));
 
-	if ((header.bit_depth != 8 && header.bit_depth != 24 && header.bit_depth != 32) || (header.version.build_type > JDX_BUILD_RELEASE)) {
-		error = JDXError_CORRUPT_FILE;
-		printf("Bit depth: %d / build_type: %d\n", header.bit_depth, header.version.build_type);
-		goto destruct_ReadHeaderFromFile;
-	}
+		for (int_fast16_t l = 0; l < header.label_count; l++) {
+			int i = 0;
+			while (i < JDX_MAX_LABEL_LEN && (label_buffer[i++] = getc(file)));
 
-destruct_ReadHeaderFromFile:
-	if (error) {
+			if (label_buffer[i - 1]) {
+				THROW(JDXError_CORRUPT_FILE);
+			}
+
+			header.labels[l] = malloc(i);
+			memcpy((char *) header.labels[l], label_buffer, i);
+		}
+
+		if (
+			fread_le(&header.item_count, sizeof(header.item_count), file) == EOF ||
+			fread_le(&header.compressed_size, sizeof(header.compressed_size), file) == EOF
+		) { THROW(JDXError_READ_FILE); }
+
+		if ((header.bit_depth != 8 && header.bit_depth != 24 && header.bit_depth != 32) || (header.version.build_type > JDX_BUILD_RELEASE)) {
+			THROW(JDXError_CORRUPT_FILE);
+		}
+	} CATCH(error) {
 		if (header.labels) {
 			for (int_fast16_t l = 0; l < header.label_count; l++) {
 				free((char *) header.labels[l]);
@@ -121,27 +108,30 @@ destruct_ReadHeaderFromFile:
 
 			free(header.labels);
 		}
-	} else {
-		if (dest && dest->labels) {
-			free_header_labels(dest);
-		}
 
-		*dest = header;
+		return error;
 	}
 
-	return error;
+	if (dest && dest->labels) {
+		free_header_labels(dest);
+	}
+
+	*dest = header;
+	return JDXError_NONE;
 }
 
 JDXError JDX_ReadHeaderFromPath(JDXHeader *dest, const char *path) {
 	FILE *file = fopen(path, "rb");
 
-	if (file == NULL)
+	if (file == NULL) {
 		return JDXError_OPEN_FILE;
+	}
 
 	JDXError error = JDX_ReadHeaderFromFile(dest, file); // Named 'error' but could (and should) be 'JDXError_NONE'
 
-	if (fclose(file) == EOF)
+	if (fclose(file) == EOF) {
 		return JDXError_CLOSE_FILE;
+	}
 
 	return error;
 }
@@ -149,42 +139,43 @@ JDXError JDX_ReadHeaderFromPath(JDXHeader *dest, const char *path) {
 JDXError JDX_WriteHeaderToFile(JDXHeader *header, FILE *file) {
 	char corruption_check[3] = {'J', 'D', 'X'};
 
-	if (fwrite(corruption_check, 1, sizeof(corruption_check), file) != sizeof(corruption_check)) {
-		return JDXError_WRITE_FILE;
-	}
-
-	// Must write this way to account for alignment of JDXHeader
-	if (
-		fwrite_le(&header->version.major, sizeof(header->version.major), file) == EOF ||
-		fwrite_le(&header->version.minor, sizeof(header->version.minor), file) == EOF ||
-		fwrite_le(&header->version.patch, sizeof(header->version.patch), file) == EOF ||
-		fwrite_le(&header->version.build_type, sizeof(header->version.build_type), file) == EOF ||
-		fwrite_le(&header->image_width, sizeof(header->image_width), file) == EOF ||
-		fwrite_le(&header->image_height, sizeof(header->image_height), file) == EOF ||
-		fwrite_le(&header->bit_depth, sizeof(header->bit_depth), file) == EOF ||
-		fwrite_le(&header->label_count, sizeof(header->label_count), file) == EOF
-	) {
-		return JDXError_WRITE_FILE;
-	}
-
-	for (int_fast16_t l = 0; l < header->label_count; l++) {
-		char *label = (char *) header->labels[l];
-		int len = strlen(label) + 1;
-
-		if (fwrite_le(label, len, file) == EOF) {
-			return JDXError_WRITE_FILE;
+	TRY {
+		if (fwrite(corruption_check, 1, sizeof(corruption_check), file) != sizeof(corruption_check)) {
+			THROW(JDXError_WRITE_FILE);
 		}
-	}
 
-	if (
-		fwrite_le(&header->item_count, sizeof(header->item_count), file) == EOF ||
-		fwrite_le(&header->compressed_size, sizeof(header->compressed_size), file) == EOF
-	) {
-		return JDXError_WRITE_FILE;
-	}
+		// Must write this way to account for alignment of JDXHeader
+		if (
+			fwrite_le(&header->version.major, sizeof(header->version.major), file) == EOF ||
+			fwrite_le(&header->version.minor, sizeof(header->version.minor), file) == EOF ||
+			fwrite_le(&header->version.patch, sizeof(header->version.patch), file) == EOF ||
+			fwrite_le(&header->version.build_type, sizeof(header->version.build_type), file) == EOF ||
+			fwrite_le(&header->image_width, sizeof(header->image_width), file) == EOF ||
+			fwrite_le(&header->image_height, sizeof(header->image_height), file) == EOF ||
+			fwrite_le(&header->bit_depth, sizeof(header->bit_depth), file) == EOF ||
+			fwrite_le(&header->label_count, sizeof(header->label_count), file) == EOF
+		) {
+			THROW(JDXError_WRITE_FILE);
+		}
 
-	if (fflush(file) == EOF) {
-		return JDXError_WRITE_FILE;
+		for (int_fast16_t l = 0; l < header->label_count; l++) {
+			char *label = (char *) header->labels[l];
+			int len = strlen(label) + 1;
+
+			if (fwrite_le(label, len, file) == EOF) {
+				THROW(JDXError_WRITE_FILE);
+			}
+		}
+
+		if (
+			fwrite_le(&header->item_count, sizeof(header->item_count), file) == EOF ||
+			fwrite_le(&header->compressed_size, sizeof(header->compressed_size), file) == EOF ||
+			fflush(file) == EOF
+		) {
+			THROW(JDXError_WRITE_FILE);
+		}
+	} CATCH(error) {
+		return error;
 	}
 
 	return JDXError_NONE;

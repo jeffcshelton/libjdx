@@ -1,3 +1,4 @@
+#include "trycatch.h"
 #include "libjdx.h"
 
 #include <stdio.h>
@@ -12,102 +13,102 @@ JDXDataset *JDX_AllocDataset(void) {
 }
 
 JDXError JDX_ReadDatasetFromFile(JDXDataset *dest, FILE *file) {
-	JDXError error = JDXError_NONE;
-
 	// Declare all allocated pointers so that they can easily be freed in the event of an error
-	JDXHeader *header = NULL;
-	uint8_t *compressed_body = NULL;
-	uint8_t *decompressed_body = NULL;
 	struct libdeflate_decompressor *decompressor = NULL;
+	uint8_t *decompressed_body = NULL;
+	uint8_t *compressed_body = NULL;
+	JDXHeader *header = NULL;
 	JDXItem *items = NULL;
 
-	header = JDX_AllocHeader();
-	error = JDX_ReadHeaderFromFile(header, file);
+	TRY {
+		header = JDX_AllocHeader();
+		JDXError header_error = JDX_ReadHeaderFromFile(header, file);
 
-	if (error) {
-		goto destruct_ReadDatasetFromFile;
-	}
+		if (header_error) {
+			THROW(header_error);
+		}
 
-	size_t compressed_size = (size_t) header->compressed_size;
-	compressed_body = malloc(compressed_size);
+		size_t compressed_size = (size_t) header->compressed_size;
+		compressed_body = malloc(compressed_size);
 
-	if (fread(compressed_body, 1, compressed_size, file) != compressed_size) {
-		error = JDXError_READ_FILE;
-		goto destruct_ReadDatasetFromFile;
-	}
+		if (fread(compressed_body, 1, compressed_size, file) != compressed_size) {
+			THROW(JDXError_READ_FILE);
+		}
 
-	size_t image_size = (
-		(size_t) header->image_width *
-		(size_t) header->image_height *
-		(size_t) header->bit_depth / 8
-	);
+		size_t image_size = (
+			(size_t) header->image_width *
+			(size_t) header->image_height *
+			(size_t) header->bit_depth / 8
+		);
 
-	size_t decompressed_size = (image_size + sizeof(JDXLabel)) * (size_t) header->item_count;
-	decompressed_body = malloc(decompressed_size);
+		size_t decompressed_size = (image_size + sizeof(JDXLabel)) * (size_t) header->item_count;
+		decompressed_body = malloc(decompressed_size);
 
-	// Decompress encoded body
-	decompressor = libdeflate_alloc_decompressor();
-	enum libdeflate_result decompress_result = libdeflate_deflate_decompress(
-		decompressor, compressed_body, compressed_size,
-		decompressed_body, decompressed_size, NULL
-	);
+		// Decompress encoded body
+		decompressor = libdeflate_alloc_decompressor();
+		enum libdeflate_result decompress_result = libdeflate_deflate_decompress(
+			decompressor, compressed_body, compressed_size,
+			decompressed_body, decompressed_size, NULL
+		);
 
-	if (decompress_result != LIBDEFLATE_SUCCESS) {
-		error = JDXError_CORRUPT_FILE;
-		goto destruct_ReadDatasetFromFile;
-	}
+		if (decompress_result != LIBDEFLATE_SUCCESS) {
+			THROW(JDXError_CORRUPT_FILE);
+		}
 
-	items = malloc(header->item_count * sizeof(JDXItem));
+		items = malloc(header->item_count * sizeof(JDXItem));
 
-	uint8_t *chunk_ptr = decompressed_body;
-	for (int i = 0; i < header->item_count; i++) {
-		// Allocate and copy image data into new image buffer and advance chunk ptr
-		uint8_t *image_data = malloc(image_size);
-		memcpy(image_data, chunk_ptr, image_size);
-		chunk_ptr += image_size;
+		uint8_t *chunk_ptr = decompressed_body;
+		for (int i = 0; i < header->item_count; i++) {
+			// Allocate and copy image data into new image buffer and advance chunk ptr
+			uint8_t *image_data = malloc(image_size);
+			memcpy(image_data, chunk_ptr, image_size);
+			chunk_ptr += image_size;
 
-		// Type pun end of chunk into label and advance chunk ptr again
-		JDXLabel label = *((JDXLabel *) chunk_ptr);
-		chunk_ptr += sizeof(JDXLabel);
+			// Type pun end of chunk into label and advance chunk ptr again
+			JDXLabel label = *((JDXLabel *) chunk_ptr);
+			chunk_ptr += sizeof(JDXLabel);
 
-		JDXItem item = {
-			image_data,
-			header->image_width,
-			header->image_height,
-			header->bit_depth,
-			label
-		};
+			JDXItem item = {
+				image_data,
+				header->image_width,
+				header->image_height,
+				header->bit_depth,
+				label
+			};
 
-		items[i] = item;
-	}
+			items[i] = item;
+		}
+	} CATCH(error) {
+		libdeflate_free_decompressor(decompressor);
+		free(decompressed_body);
+		free(compressed_body);
 
-destruct_ReadDatasetFromFile:
-	free(compressed_body);
-	free(decompressed_body);
-	libdeflate_free_decompressor(decompressor);
-
-	if (error) {
 		JDX_FreeHeader(header);
-	} else {
-		if (dest->items) {
-			if (dest->header && dest->header->item_count > 0) {
-				for (uint_fast64_t i = 0; i < dest->header->item_count; i++) {
-					free(dest->items[i].data);
-				}
-			}
-
-			free(dest->items);
-		}
-
-		if (dest->header) {
-			JDX_FreeHeader(dest->header);
-		}
-
-		dest->header = header;
-		dest->items = items;
+		return error;
 	}
 
-	return error; // If successful, JDXError_NONE
+	libdeflate_free_decompressor(decompressor);
+	free(decompressed_body);
+	free(compressed_body);
+
+	if (dest->items) {
+		if (dest->header && dest->header->item_count > 0) {
+			for (uint_fast64_t i = 0; i < dest->header->item_count; i++) {
+				free(dest->items[i].data);
+			}
+		}
+
+		free(dest->items);
+	}
+
+	if (dest->header) {
+		JDX_FreeHeader(dest->header);
+	}
+
+	dest->header = header;
+	dest->items = items;
+
+	return JDXError_NONE;
 }
 
 JDXError JDX_ReadDatasetFromPath(JDXDataset *dest, const char *path) {
@@ -127,71 +128,74 @@ JDXError JDX_ReadDatasetFromPath(JDXDataset *dest, const char *path) {
 }
 
 JDXError JDX_WriteDatasetToFile(JDXDataset *dataset, FILE *file) {
-	JDXError error = JDXError_NONE;
-
 	// Declare all allocated pointers so that they can easily be freed in the event of an error
+	struct libdeflate_compressor *compressor = NULL;
 	uint8_t *uncompressed_body = NULL;
 	uint8_t *compressed_body = NULL;
-	struct libdeflate_compressor *compressor = NULL;
 
-	size_t image_size = (
-		(size_t) dataset->header->image_width *
-		(size_t) dataset->header->image_height *
-		(size_t) dataset->header->bit_depth / 8
-	);
+	TRY {
+		size_t image_size = (
+			(size_t) dataset->header->image_width *
+			(size_t) dataset->header->image_height *
+			(size_t) dataset->header->bit_depth / 8
+		);
 
-	size_t uncompressed_size = (
-		(size_t) (image_size + sizeof(JDXLabel)) *
-		(size_t) dataset->header->item_count
-	);
+		size_t uncompressed_size = (
+			(size_t) (image_size + sizeof(JDXLabel)) *
+			(size_t) dataset->header->item_count
+		);
 
-	uncompressed_body = malloc(uncompressed_size);
-	uint8_t *body_ptr = uncompressed_body;
+		uncompressed_body = malloc(uncompressed_size);
+		uint8_t *body_ptr = uncompressed_body;
 
-	for (int i = 0; i < dataset->header->item_count; i++) {
-		memcpy(body_ptr, dataset->items[i].data, image_size);
-		body_ptr += image_size;
+		for (int i = 0; i < dataset->header->item_count; i++) {
+			memcpy(body_ptr, dataset->items[i].data, image_size);
+			body_ptr += image_size;
 
-		*((JDXLabel *) body_ptr) = dataset->items[i].label;
-		body_ptr += sizeof(JDXLabel);
+			*((JDXLabel *) body_ptr) = dataset->items[i].label;
+			body_ptr += sizeof(JDXLabel);
+		}
+
+		// Must allocate for entire uncompressed size despite it almost certainly being less
+		compressed_body = malloc(uncompressed_size);
+		
+		compressor = libdeflate_alloc_compressor(12);
+		size_t compressed_size = libdeflate_deflate_compress(
+			compressor,
+			uncompressed_body,
+			uncompressed_size,
+			compressed_body,
+			uncompressed_size
+		);
+
+		// libdeflate will return 0 if operation failed
+		if (compressed_size == 0) {
+			THROW(JDXError_WRITE_FILE);
+		}
+
+		dataset->header->compressed_size = (uint64_t) compressed_size;
+		JDXError header_error = JDX_WriteHeaderToFile(dataset->header, file);
+
+		if (header_error) {
+			THROW(header_error);
+		}
+
+		if (fwrite(compressed_body, 1, compressed_size, file) != compressed_size || fflush(file) == EOF) {
+			THROW(JDXError_WRITE_FILE);
+		}
+	} CATCH(error) {
+		libdeflate_free_compressor(compressor);
+		free(uncompressed_body);
+		free(compressed_body);
+
+		return error;
 	}
 
-	// Must allocate for entire uncompressed size despite it almost certainly being less
-	compressed_body = malloc(uncompressed_size);
-	
-	compressor = libdeflate_alloc_compressor(12);
-	size_t compressed_size = libdeflate_deflate_compress(
-		compressor,
-		uncompressed_body,
-		uncompressed_size,
-		compressed_body,
-		uncompressed_size
-	);
-
-	// libdeflate will return 0 if operation failed
-	if (compressed_size == 0) {
-		error = JDXError_WRITE_FILE;
-		goto destruct_WriteDatasetToFile;
-	}
-
-	dataset->header->compressed_size = (uint64_t) compressed_size;
-	error = JDX_WriteHeaderToFile(dataset->header, file);
-
-	if (error) {
-		goto destruct_WriteDatasetToFile;
-	}
-
-	if (fwrite(compressed_body, 1, compressed_size, file) != compressed_size || fflush(file) == EOF) {
-		error = JDXError_WRITE_FILE;
-		goto destruct_WriteDatasetToFile;
-	}
-
-destruct_WriteDatasetToFile:
+	libdeflate_free_compressor(compressor);
 	free(uncompressed_body);
 	free(compressed_body);
-	libdeflate_free_compressor(compressor);
 
-	return error;
+	return JDXError_NONE;
 }
 
 JDXError JDX_WriteDatasetToPath(JDXDataset *dataset, const char *path) {
