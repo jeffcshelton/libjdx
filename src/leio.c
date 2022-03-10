@@ -1,20 +1,21 @@
 #include "leio.h"
 
+#include <stdbool.h>
 #include <stdint.h>
 
-static int cpu_is_le = -1;
+static inline bool machine_is_le(void) {
+  static int_fast8_t precheck = -1;
 
-static inline void check_le(void) {
-  if (cpu_is_le == -1) {
-    uint64_t t = 0x000000FF;
-    cpu_is_le = ((unsigned char *) &t)[0] == 0xFF;
+  if (precheck == -1) {
+    uint64_t mem = 0x000000FF;
+    precheck = ((unsigned char *) &mem)[0] == 0xFF;
   }
+
+  return (bool) precheck;
 }
 
 int fread_le(void *dest, size_t size, FILE *file) {
-  check_le();
-
-  if (cpu_is_le) {
+  if (machine_is_le()) {
     return fread(dest, size, 1, file) == 1 ? 0 : EOF;
   } else {
     for (size_t i = size - 1; i >= 0; i--) {
@@ -28,9 +29,7 @@ int fread_le(void *dest, size_t size, FILE *file) {
 }
 
 int fwrite_le(void *src, size_t size, FILE *file) {
-  check_le();
-
-  if (cpu_is_le) {
+  if (machine_is_le()) {
     return fwrite(src, size, 1, file) == 1 ? 0 : EOF;
   } else {
     for (size_t i = size - 1; i >= 0; i--) {
