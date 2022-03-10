@@ -14,9 +14,9 @@ static inline bool machine_is_le(void) {
   return (bool) precheck;
 }
 
-int fread_le(void *dest, size_t size, FILE *file) {
+size_t fread_le(void *dest, size_t size, FILE *file) {
   if (machine_is_le()) {
-    return fread(dest, size, 1, file) == 1 ? 0 : EOF;
+    return fread(dest, size, 1, file) == 1 ? size : EOF;
   } else {
     for (size_t i = size - 1; i >= 0; i--) {
       if ((((char *) dest)[i] = getc(file)) == EOF) {
@@ -28,9 +28,9 @@ int fread_le(void *dest, size_t size, FILE *file) {
   }
 }
 
-int fwrite_le(void *src, size_t size, FILE *file) {
+size_t fwrite_le(void *src, size_t size, FILE *file) {
   if (machine_is_le()) {
-    return fwrite(src, size, 1, file) == 1 ? 0 : EOF;
+    return fwrite(src, size, 1, file) == 1 ? size : EOF;
   } else {
     for (size_t i = size - 1; i >= 0; i--) {
       if (putc(((char *) src)[i], file) == EOF) {
