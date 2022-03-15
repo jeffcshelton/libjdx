@@ -75,7 +75,7 @@ typedef struct {
 JDXHeader *JDX_AllocHeader(void);
 void JDX_FreeHeader(JDXHeader *header);
 
-void JDX_CopyHeader(JDXHeader *dest, JDXHeader *src);
+void JDX_CopyHeader(JDXHeader *dest, const JDXHeader *src);
 
 JDXError JDX_ReadHeaderFromFile(JDXHeader *dest, FILE *file);
 JDXError JDX_ReadHeaderFromPath(JDXHeader *dest, const char *path);
@@ -84,8 +84,8 @@ JDXError JDX_WriteHeaderToFile(JDXHeader *header, FILE *file);
 JDXDataset *JDX_AllocDataset(void);
 void JDX_FreeDataset(JDXDataset *dataset);
 
-void JDX_CopyDataset(JDXDataset *dest, JDXDataset *src);
-JDXError JDX_AppendDataset(JDXDataset *dest, JDXDataset *src);
+void JDX_CopyDataset(JDXDataset *dest, const JDXDataset *src);
+JDXError JDX_AppendDataset(JDXDataset *dest, const JDXDataset *src);
 
 JDXError JDX_ReadDatasetFromFile(JDXDataset *dest, FILE *file);
 JDXError JDX_ReadDatasetFromPath(JDXDataset *dest, const char *path);
