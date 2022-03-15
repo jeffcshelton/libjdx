@@ -27,7 +27,7 @@ void JDX_FreeDataset(JDXDataset *dataset) {
 	free(dataset);
 }
 
-void JDX_CopyDataset(JDXDataset *dest, JDXDataset *src) {
+void JDX_CopyDataset(JDXDataset *dest, const JDXDataset *src) {
 	dest->header = JDX_AllocHeader();
 	JDX_CopyHeader(dest->header, src->header);
 
@@ -53,7 +53,7 @@ void JDX_CopyDataset(JDXDataset *dest, JDXDataset *src) {
 	}
 }
 
-JDXError JDX_AppendDataset(JDXDataset *dest, JDXDataset *src) {
+JDXError JDX_AppendDataset(JDXDataset *dest, const JDXDataset *src) {
 	// Check for any compatibility errors between the two datasets
 	if (src->header->image_width != dest->header->image_width) {
 		return JDXError_UNEQUAL_WIDTHS;
