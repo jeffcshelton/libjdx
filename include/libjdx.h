@@ -24,7 +24,7 @@ typedef union {
 	int32_t raw;
 } JDXVersion;
 
-static const JDXVersion JDX_VERSION = {{ JDX_BUILD_DEV, 0, 4, 0 }};
+static const JDXVersion JDX_VERSION = {{ JDX_BUILD_ALPHA, 0, 4, 0 }};
 
 int32_t JDX_CompareVersions(JDXVersion v1, JDXVersion v2);
 
