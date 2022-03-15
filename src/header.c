@@ -150,9 +150,7 @@ JDXError JDX_WriteHeaderToFile(JDXHeader *header, FILE *file) {
 		fwrite_le(&header->image_height, sizeof(header->image_height), file) == EOF ||
 		fwrite_le(&header->bit_depth, sizeof(header->bit_depth), file) == EOF ||
 		fwrite_le(&header->label_count, sizeof(header->label_count), file) == EOF
-	) {
-		return JDXError_WRITE_FILE;
-	}
+	) { return JDXError_WRITE_FILE; }
 
 	for (int_fast16_t l = 0; l < header->label_count; l++) {
 		char *label = (char *) header->labels[l];
@@ -166,9 +164,7 @@ JDXError JDX_WriteHeaderToFile(JDXHeader *header, FILE *file) {
 	if (
 		fwrite_le(&header->item_count, sizeof(header->item_count), file) == EOF ||
 		fflush(file) == EOF
-	) {
-		return JDXError_WRITE_FILE;
-	}
+	) { return JDXError_WRITE_FILE; }
 
 	return JDXError_NONE;
 }
