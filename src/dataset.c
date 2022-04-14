@@ -3,6 +3,7 @@
 #include "leio.h"
 
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <libdeflate.h>
@@ -63,6 +64,36 @@ JDXError JDX_AppendDataset(JDXDataset *dest, const JDXDataset *src) {
 		return JDXError_UNEQUAL_BIT_DEPTHS;
 	}
 
+	JDXLabel src_label_map[src->header->label_count];
+
+	uint_fast16_t max_label_count = dest->header->label_count + src->header->label_count;
+	dest->header->labels = realloc(dest->header->labels, max_label_count * sizeof(char *));
+	uint_fast16_t label_count = dest->header->label_count;
+
+	for (uint_fast16_t i = 0; i < src->header->label_count; i++) {
+		uint_fast16_t j;
+
+		for (j = 0; j < dest->header->label_count; j++) {
+			if (strcmp(src->header->labels[i], dest->header->labels[j]) == 0) {
+				src_label_map[i] = j;
+			}
+		}
+
+		if (j != dest->header->label_count) {
+			uint_fast16_t l = label_count++;
+
+			dest->header->labels[l] = strdup(src->header->labels[i]);
+			src_label_map[i] = l;
+		}
+	}
+
+	// Reallocate smaller to prevent wasting space for large sets of labels
+	if (label_count < max_label_count) {
+		dest->header->labels = realloc(dest->header->labels, label_count * sizeof(char *));
+	}
+
+	dest->header->label_count = label_count;
+
 	// Calculate final item count and realloc destination arrays accordingly
 	uint64_t new_item_count = dest->header->item_count + src->header->item_count;
 	dest->items = realloc(dest->items, new_item_count * sizeof(JDXItem));
@@ -80,7 +111,7 @@ JDXError JDX_AppendDataset(JDXDataset *dest, const JDXDataset *src) {
 			src->header->image_width,
 			src->header->image_height,
 			src->header->bit_depth,
-			src->items[s].label
+			src_label_map[src->items[s].label]
 		};
 
 		memcpy(copy_item.data, src->items[s].data, image_size);
