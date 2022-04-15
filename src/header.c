@@ -52,6 +52,14 @@ void JDX_CopyHeader(JDXHeader *dest, const JDXHeader *src) {
 	dest->image_count = src->image_count;
 }
 
+size_t JDX_GetImageSize(JDXHeader *header) {
+	return (
+		(size_t) header->image_width *
+		(size_t) header->image_height *
+		(size_t) header->bit_depth / 8
+	);
+}
+
 JDXError JDX_ReadHeaderFromFile(JDXHeader *dest, FILE *file) {
 	char corruption_check[3];
 	char label_buffer[JDX_MAX_LABEL_LEN];

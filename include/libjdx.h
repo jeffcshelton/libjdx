@@ -73,6 +73,8 @@ void JDX_FreeHeader(JDXHeader *header);
 
 void JDX_CopyHeader(JDXHeader *dest, const JDXHeader *src);
 
+size_t JDX_GetImageSize(JDXHeader *header);
+
 JDXError JDX_ReadHeaderFromFile(JDXHeader *dest, FILE *file);
 JDXError JDX_ReadHeaderFromPath(JDXHeader *dest, const char *path);
 JDXError JDX_WriteHeaderToFile(JDXHeader *header, FILE *file);
