@@ -49,7 +49,7 @@ void JDX_CopyHeader(JDXHeader *dest, const JDXHeader *src) {
 	}
 
 	dest->label_count = src->label_count;
-	dest->item_count = src->item_count;
+	dest->image_count = src->image_count;
 }
 
 JDXError JDX_ReadHeaderFromFile(JDXHeader *dest, FILE *file) {
@@ -90,7 +90,7 @@ JDXError JDX_ReadHeaderFromFile(JDXHeader *dest, FILE *file) {
 			memcpy((char *) header.labels[l], label_buffer, i);
 		}
 
-		if (fread_le(&header.item_count, sizeof(header.item_count), file) == EOF) {
+		if (fread_le(&header.image_count, sizeof(header.image_count), file) == EOF) {
 			THROW(JDXError_READ_FILE);
 		}
 
@@ -162,7 +162,7 @@ JDXError JDX_WriteHeaderToFile(JDXHeader *header, FILE *file) {
 	}
 
 	if (
-		fwrite_le(&header->item_count, sizeof(header->item_count), file) == EOF ||
+		fwrite_le(&header->image_count, sizeof(header->image_count), file) == EOF ||
 		fflush(file) == EOF
 	) { return JDXError_WRITE_FILE; }
 
