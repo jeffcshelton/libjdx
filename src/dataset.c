@@ -19,12 +19,9 @@ void JDX_FreeDataset(JDXDataset *dataset) {
 		return;
 	}
 
-	for (int i = 0; i < dataset->header->item_count; i++) {
-		free(dataset->items[i].data);
-	}
-
 	JDX_FreeHeader(dataset->header);
-	free(dataset->items);
+	free(dataset->_raw_image_data);
+	free(dataset->_raw_labels);
 	free(dataset);
 }
 
@@ -32,26 +29,18 @@ void JDX_CopyDataset(JDXDataset *dest, const JDXDataset *src) {
 	dest->header = JDX_AllocHeader();
 	JDX_CopyHeader(dest->header, src->header);
 
-	dest->items = malloc(src->header->item_count * sizeof(JDXItem));
+	size_t image_block_size = JDX_GetImageSize(src->header) * (size_t) src->header->image_count;
 
-	size_t image_size = (
-		(size_t) src->header->image_width *
-		(size_t) src->header->image_height *
-		(size_t) src->header->bit_depth / 8
+	size_t label_block_size = (
+		(size_t) src->header->image_count *
+		sizeof(uint16_t)
 	);
 
-	for (int i = 0; i < src->header->item_count; i++) {
-		JDXItem item_copy = {
-			malloc(image_size),
-			src->header->image_width,
-			src->header->image_height,
-			src->header->bit_depth,
-			src->items[i].label
-		};
+	dest->_raw_labels = malloc(label_block_size);
+	memcpy(dest->_raw_labels, src->_raw_labels, label_block_size);
 
-		memcpy(item_copy.data, src->items[i].data, image_size);
-		dest->items[i] = item_copy;
-	}
+	dest->_raw_image_data = malloc(image_block_size);
+	memcpy(dest->_raw_image_data, src->_raw_image_data, image_block_size);
 }
 
 JDXError JDX_AppendDataset(JDXDataset *dest, const JDXDataset *src) {
@@ -64,7 +53,7 @@ JDXError JDX_AppendDataset(JDXDataset *dest, const JDXDataset *src) {
 		return JDXError_UNEQUAL_BIT_DEPTHS;
 	}
 
-	JDXLabel src_label_map[src->header->label_count];
+	uint16_t src_label_map[src->header->label_count];
 
 	uint_fast16_t max_label_count = dest->header->label_count + src->header->label_count;
 	dest->header->labels = realloc(dest->header->labels, max_label_count * sizeof(char *));
@@ -95,31 +84,27 @@ JDXError JDX_AppendDataset(JDXDataset *dest, const JDXDataset *src) {
 	dest->header->label_count = label_count;
 
 	// Calculate final item count and realloc destination arrays accordingly
-	uint64_t new_item_count = dest->header->item_count + src->header->item_count;
-	dest->items = realloc(dest->items, new_item_count * sizeof(JDXItem));
-
+	uint64_t new_image_count = dest->header->image_count + src->header->image_count;
 	size_t image_size = (
 		(size_t) src->header->image_width *
 		(size_t) src->header->image_height *
 		(size_t) src->header->bit_depth / 8
 	);
 
-	// Copy each image and label individually and store them in dest
-	for (int s = 0, d = dest->header->item_count; s < src->header->item_count; s++, d++) {
-		JDXItem copy_item = {
-			malloc(image_size),
-			src->header->image_width,
-			src->header->image_height,
-			src->header->bit_depth,
-			src_label_map[src->items[s].label]
-		};
+	dest->_raw_labels = realloc(dest->_raw_labels, new_image_count * sizeof(uint16_t));
 
-		memcpy(copy_item.data, src->items[s].data, image_size);
-		dest->items[d] = copy_item;
+	dest->_raw_image_data = realloc(dest->_raw_image_data, image_size * (size_t) new_image_count);
+	memcpy(
+		dest->_raw_image_data + image_size * (size_t) dest->header->image_count,
+		src->_raw_image_data,
+		image_size * (size_t) src->header->image_count
+	);
+
+	for (uint_fast64_t s = 0, d = dest->header->image_count; s < src->header->image_count; s++, d++) {
+		dest->_raw_labels[d] = src_label_map[src->_raw_labels[s]];
 	}
 
-	// Set destination item count
-	dest->header->item_count = new_item_count;
+	dest->header->image_count = new_image_count;
 
 	return JDXError_NONE;
 }
@@ -129,8 +114,9 @@ JDXError JDX_ReadDatasetFromFile(JDXDataset *dest, FILE *file) {
 	struct libdeflate_decompressor *decompressor = NULL;
 	uint8_t *decompressed_body = NULL;
 	uint8_t *compressed_body = NULL;
+	uint8_t *raw_image_data = NULL;
+	uint16_t *raw_labels = NULL;
 	JDXHeader *header = NULL;
-	JDXItem *items = NULL;
 
 	TRY {
 		header = JDX_AllocHeader();
@@ -157,7 +143,7 @@ JDXError JDX_ReadDatasetFromFile(JDXDataset *dest, FILE *file) {
 			(size_t) header->bit_depth / 8
 		);
 
-		size_t decompressed_size = (image_size + sizeof(JDXLabel)) * (size_t) header->item_count;
+		size_t decompressed_size = (image_size + sizeof(uint16_t)) * (size_t) header->image_count;
 		decompressed_body = malloc(decompressed_size);
 
 		// Decompress encoded body
@@ -171,28 +157,19 @@ JDXError JDX_ReadDatasetFromFile(JDXDataset *dest, FILE *file) {
 			THROW(JDXError_CORRUPT_FILE);
 		}
 
-		items = malloc(header->item_count * sizeof(JDXItem));
+		raw_image_data = malloc(image_size * header->image_count);
+		raw_labels = malloc(header->image_count * sizeof(uint16_t));
 
-		uint8_t *chunk_ptr = decompressed_body;
-		for (int i = 0; i < header->item_count; i++) {
-			// Allocate and copy image data into new image buffer and advance chunk ptr
-			uint8_t *image_data = malloc(image_size);
-			memcpy(image_data, chunk_ptr, image_size);
-			chunk_ptr += image_size;
+		uint8_t *dest_chunk_ptr = raw_image_data;
+		uint8_t *src_chunk_ptr = decompressed_body;
 
-			// Type pun end of chunk into label and advance chunk ptr again
-			JDXLabel label = *((JDXLabel *) chunk_ptr);
-			chunk_ptr += sizeof(JDXLabel);
+		for (int i = 0; i < header->image_count; i++) {
+			memcpy(dest_chunk_ptr, src_chunk_ptr, image_size);
+			dest_chunk_ptr += image_size;
+			src_chunk_ptr += image_size;
 
-			JDXItem item = {
-				image_data,
-				header->image_width,
-				header->image_height,
-				header->bit_depth,
-				label
-			};
-
-			items[i] = item;
+			raw_labels[i] = *((uint16_t *) src_chunk_ptr);
+			src_chunk_ptr += sizeof(uint16_t);
 		}
 	} CATCH(error) {
 		libdeflate_free_decompressor(decompressor);
@@ -207,22 +184,13 @@ JDXError JDX_ReadDatasetFromFile(JDXDataset *dest, FILE *file) {
 	free(decompressed_body);
 	free(compressed_body);
 
-	if (dest->items) {
-		if (dest->header && dest->header->item_count > 0) {
-			for (uint_fast64_t i = 0; i < dest->header->item_count; i++) {
-				free(dest->items[i].data);
-			}
-		}
-
-		free(dest->items);
-	}
-
-	if (dest->header) {
-		JDX_FreeHeader(dest->header);
-	}
+	JDX_FreeHeader(dest->header);
+	free(dest->_raw_image_data);
+	free(dest->_raw_labels);
 
 	dest->header = header;
-	dest->items = items;
+	dest->_raw_image_data = raw_image_data;
+	dest->_raw_labels = raw_labels;
 
 	return JDXError_NONE;
 }
@@ -257,19 +225,22 @@ JDXError JDX_WriteDatasetToFile(JDXDataset *dataset, FILE *file) {
 		);
 
 		size_t uncompressed_size = (
-			(size_t) (image_size + sizeof(JDXLabel)) *
-			(size_t) dataset->header->item_count
+			(size_t) (image_size + sizeof(uint16_t)) *
+			(size_t) dataset->header->image_count
 		);
 
 		uncompressed_body = malloc(uncompressed_size);
-		uint8_t *body_ptr = uncompressed_body;
 
-		for (int i = 0; i < dataset->header->item_count; i++) {
-			memcpy(body_ptr, dataset->items[i].data, image_size);
+		uint8_t *body_ptr = uncompressed_body;
+		uint8_t *image_data_ptr = dataset->_raw_image_data;
+
+		for (int i = 0; i < dataset->header->image_count; i++) {
+			memcpy(body_ptr, image_data_ptr, image_size);
+			image_data_ptr += image_size;
 			body_ptr += image_size;
 
-			*((JDXLabel *) body_ptr) = dataset->items[i].label;
-			body_ptr += sizeof(JDXLabel);
+			*((uint16_t *) body_ptr) = dataset->_raw_labels[i];
+			body_ptr += sizeof(uint16_t);
 		}
 
 		// Must allocate for entire uncompressed size despite it almost certainly being less
