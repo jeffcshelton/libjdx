@@ -3,8 +3,8 @@
 #include <string.h>
 
 TEST_FUNC(CompareVersions) {
-	JDXVersion less_than_current = {{ JDX_BUILD_DEV, 0x00, 0x00, 0x00 }};
-	JDXVersion greater_than_current = {{ JDX_BUILD_RELEASE, 0x7F, 0x7F, 0x7F }};
+	JDXVersion less_than_current = { JDX_BUILD_DEV, 0x00, 0x00, 0x00 };
+	JDXVersion greater_than_current = { JDX_BUILD_RELEASE, 0x7F, 0x7F, 0x7F };
 
 	final_state = (
 		JDX_CompareVersions(JDX_VERSION, JDX_VERSION) == 0 &&
@@ -23,7 +23,7 @@ TEST_FUNC(ReadHeaderFromPath) {
 		header->bit_depth == 24 &&
 		header->image_width == 52 &&
 		header->image_height == 52 &&
-		header->item_count == 8
+		header->image_count == 8
 	) ? STATE_SUCCESS : STATE_FAILURE;
 
 	JDX_FreeHeader(header);
