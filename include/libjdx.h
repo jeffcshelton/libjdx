@@ -16,18 +16,6 @@ extern "C" {
 #define JDX_BUILD_RC 3
 #define JDX_BUILD_RELEASE 4
 
-typedef union {
-	struct {
-		uint8_t build_type, patch, minor, major;
-	};
-
-	int32_t raw;
-} JDXVersion;
-
-static const JDXVersion JDX_VERSION = {{ JDX_BUILD_ALPHA, 0, 4, 0 }};
-
-int32_t JDX_CompareVersions(JDXVersion v1, JDXVersion v2);
-
 typedef enum {
 	JDXError_NONE, // must be zero by standard
 
@@ -44,33 +32,41 @@ typedef enum {
 	JDXError_UNEQUAL_BIT_DEPTHS
 } JDXError;
 
-typedef uint16_t JDXLabel;
-
 typedef struct {
-	uint8_t *data;
-
-	uint16_t width, height;
-	uint8_t bit_depth;
-
-	JDXLabel label;
-} JDXItem;
+	uint8_t build_type, patch, minor, major;
+} JDXVersion;
 
 typedef struct {
 	JDXVersion version;
 
+	uint64_t image_count;
 	uint16_t image_width, image_height;
 	uint8_t bit_depth;
 
 	const char **labels;
 	uint16_t label_count;
-
-	uint64_t item_count;
 } JDXHeader;
 
 typedef struct {
 	JDXHeader *header;
-	JDXItem *items;
+
+	uint16_t *_raw_labels;
+	uint8_t *_raw_image_data;
 } JDXDataset;
+
+typedef struct {
+	uint8_t *raw_data;
+
+	uint16_t image_width, image_height;
+	uint8_t bit_depth;
+
+	char *label;
+	uint16_t label_index;
+} JDXImage;
+
+static const JDXVersion JDX_VERSION = { JDX_BUILD_ALPHA, 0, 4, 0 };
+
+int32_t JDX_CompareVersions(JDXVersion v1, JDXVersion v2);
 
 JDXHeader *JDX_AllocHeader(void);
 void JDX_FreeHeader(JDXHeader *header);
