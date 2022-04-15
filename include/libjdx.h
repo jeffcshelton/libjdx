@@ -83,10 +83,14 @@ void JDX_FreeDataset(JDXDataset *dataset);
 void JDX_CopyDataset(JDXDataset *dest, const JDXDataset *src);
 JDXError JDX_AppendDataset(JDXDataset *dest, const JDXDataset *src);
 
+JDXImage *JDX_GetImage(JDXDataset *dataset, uint64_t index);
+
 JDXError JDX_ReadDatasetFromFile(JDXDataset *dest, FILE *file);
 JDXError JDX_ReadDatasetFromPath(JDXDataset *dest, const char *path);
 JDXError JDX_WriteDatasetToFile(JDXDataset *dataset, FILE *file);
 JDXError JDX_WriteDatasetToPath(JDXDataset *dataset, const char *path);
+
+void JDX_FreeImage(JDXImage *image);
 
 #ifdef __cplusplus
 }

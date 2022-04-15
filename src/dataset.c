@@ -109,6 +109,28 @@ JDXError JDX_AppendDataset(JDXDataset *dest, const JDXDataset *src) {
 	return JDXError_NONE;
 }
 
+JDXImage *JDX_GetImage(JDXDataset *dataset, uint64_t index) {
+	if (index >= dataset->header->image_count) {
+		return NULL;
+	}
+
+	JDXImage *image = malloc(sizeof(JDXImage));
+	image->image_width = dataset->header->image_width;
+	image->image_height = dataset->header->image_height;
+	image->bit_depth = dataset->header->bit_depth;
+
+	size_t image_size = JDX_GetImageSize(dataset->header);
+
+	uint8_t *image_data = malloc(image_size);
+	memcpy(image_data, dataset->_raw_image_data + image_size * index, image_size);
+	image->raw_data = image_data;
+
+	image->label_index = dataset->_raw_labels[index];
+	image->label = strdup(dataset->header->labels[image->label_index]);
+
+	return image;
+}
+
 JDXError JDX_ReadDatasetFromFile(JDXDataset *dest, FILE *file) {
 	// Declare all allocated pointers so that they can easily be freed in the event of an error
 	struct libdeflate_decompressor *decompressor = NULL;
@@ -302,4 +324,10 @@ JDXError JDX_WriteDatasetToPath(JDXDataset *dataset, const char *path) {
 	}
 
 	return error;
+}
+
+void JDX_FreeImage(JDXImage *image) {
+	free(image->raw_data);
+	free(image->label);
+	free(image);
 }
