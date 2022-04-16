@@ -109,14 +109,14 @@ JDXError JDX_AppendDataset(JDXDataset *dest, const JDXDataset *src) {
 	return JDXError_NONE;
 }
 
-JDXImage *JDX_GetImage(JDXDataset *dataset, uint64_t index) {
+JDXImage *JDX_GetImage(const JDXDataset *dataset, uint64_t index) {
 	if (index >= dataset->header->image_count) {
 		return NULL;
 	}
 
 	JDXImage *image = malloc(sizeof(JDXImage));
-	image->image_width = dataset->header->image_width;
-	image->image_height = dataset->header->image_height;
+	image->width = dataset->header->image_width;
+	image->height = dataset->header->image_height;
 	image->bit_depth = dataset->header->bit_depth;
 
 	size_t image_size = JDX_GetImageSize(dataset->header);

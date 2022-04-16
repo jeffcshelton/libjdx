@@ -52,7 +52,7 @@ void JDX_CopyHeader(JDXHeader *dest, const JDXHeader *src) {
 	dest->image_count = src->image_count;
 }
 
-size_t JDX_GetImageSize(JDXHeader *header) {
+size_t JDX_GetImageSize(const JDXHeader *header) {
 	return (
 		(size_t) header->image_width *
 		(size_t) header->image_height *
