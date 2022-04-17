@@ -18,10 +18,15 @@ _ = $(shell git submodule update --init --recursive)
 .PHONY: libjdx install uninstall tests clean
 
 libjdx: lib/libjdx.a
+debug: lib/libjdx_debug.a
 
 lib/libjdx.a: $(RELEASE_OBJS) $(LIBDEFLATE_OBJS)
 	@mkdir -p lib
 	@ar -r lib/libjdx.a $^
+
+lib/libjdx_debug.a: $(DEBUG_OBJS) $(LIBDEFLATE_OBJS)
+	@mkdir -p lib
+	@ar cr lib/libjdx_debug.a $^
 
 install: lib/libjdx.a
 	cp -r include/libjdx.h /usr/local/include
