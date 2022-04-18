@@ -161,10 +161,9 @@ JDXError JDX_WriteHeaderToFile(JDXHeader *header, FILE *file) {
 	) { return JDXError_WRITE_FILE; }
 
 	for (int_fast16_t l = 0; l < header->label_count; l++) {
-		char *label = (char *) header->labels[l];
-		int len = strlen(label) + 1;
+		char *label = header->labels[l];
 
-		if (fwrite_le(label, len, file) == EOF) {
+		if (fwrite_le(label, strlen(label) + 1, file) == EOF) {
 			return JDXError_WRITE_FILE;
 		}
 	}

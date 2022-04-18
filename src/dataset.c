@@ -185,7 +185,7 @@ JDXError JDX_ReadDatasetFromFile(JDXDataset *dest, FILE *file) {
 		uint8_t *dest_chunk_ptr = raw_image_data;
 		uint8_t *src_chunk_ptr = decompressed_body;
 
-		for (int i = 0; i < header->image_count; i++) {
+		for (uint_fast64_t i = 0; i < header->image_count; i++) {
 			memcpy(dest_chunk_ptr, src_chunk_ptr, image_size);
 			dest_chunk_ptr += image_size;
 			src_chunk_ptr += image_size;
@@ -256,7 +256,7 @@ JDXError JDX_WriteDatasetToFile(JDXDataset *dataset, FILE *file) {
 		uint8_t *body_ptr = uncompressed_body;
 		uint8_t *image_data_ptr = dataset->_raw_image_data;
 
-		for (int i = 0; i < dataset->header->image_count; i++) {
+		for (uint_fast64_t i = 0; i < dataset->header->image_count; i++) {
 			memcpy(body_ptr, image_data_ptr, image_size);
 			image_data_ptr += image_size;
 			body_ptr += image_size;
