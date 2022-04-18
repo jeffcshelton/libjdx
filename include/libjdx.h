@@ -64,7 +64,7 @@ typedef struct {
 	uint16_t label_index;
 } JDXImage;
 
-static const JDXVersion JDX_VERSION = { JDX_BUILD_ALPHA, 0, 4, 0 };
+extern const JDXVersion JDX_VERSION;
 
 int32_t JDX_CompareVersions(JDXVersion v1, JDXVersion v2);
 
