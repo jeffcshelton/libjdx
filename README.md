@@ -24,31 +24,39 @@ To read a dataset from a JDX file and iterate through the images and labels with
 #include <libjdx.h>
 
 int main(void) {
-    JDXDataset dataset = JDX_ReadDatasetFromPath("path/to/file.jdx");
+    JDXDataset *dataset = JDX_AllocDataset();
+    JDXError read_error = JDX_ReadDatasetFromPath(dataset, "path/to/file.jdx");
 
-    if (dataset.error) {
-        // Handle possible error here
+    if (read_error) {
+        // Handle possible error here.
     }
 
-    for (int i = 0; i < dataset.header.item_count; i++) {
-        // Access each image and its corresponding label
-        JDXImage image = dataset.images[i];
-        JDXLabel label = dataset.labels[i];
+    for (uint64_t i = 0; i < dataset.header.image_count; i++) {
+        // Access each image:
+        JDXImage *image = JDX_GetImage(dataset, i);
 
-        // Get width and height of image
-        int16_t width = image.width;
-        int16_t height = image.height;
+        // Get width, height, and bit depth of image:
+        uint16_t width = image->width;
+        uint16_t height = image->height;
+        uint8_t bit_depth = image->bit_depth;
 
-        // (int) image.color_type corresponds to the number of bytes in each pixel:
-        // - JDXColorType_GRAY => 1 byte per pixel (luma)
-        // - JDXColorType_RGB => 3 bytes per pixel (red, green, blue)
-        // - JDXColorType_RGBA => 4 bytes per pixel (red, green, blue, alpha)
+        // Each possible value of image->bit_depth corresponds to the number of bits in each pixel:
+        // - 8 bits => 1 bytes per pixel (luma)
+        // - 24 bits => 3 bytes per pixel (red, green, blue)
+        // - 32 bits => 4 bytes per pixel (red, green, blue, alpha)
 
-        // Get underlying image data
-        uint8_t *image_data = image.data;
+        // Get label of image (both the string label and numberical label):
+        const char *label = image->label;
+        uint16_t label_num = image->label_index;
+
+        // Get underlying pixel data:
+        uint8_t *pixel_data = image->raw_data;
+
+        // Must free image at the end of use because a new one is copied for each call of JDX_GetImage.
+        JDX_FreeImage(image);
     }
 
-    // Must free dataset at end of use to prevent memory leaks
+    // Must free dataset at end of use to prevent memory leaks.
     JDX_FreeDataset(dataset);
 }
 ```
@@ -56,23 +64,25 @@ int main(void) {
 To read only the header of a JDX file:
 
 ```c
-#include <jdx/jdx.h>
+#include <libjdx.h>
 
 int main(void) {
-    JDXHeader header = JDX_ReadHeaderFromPath("path/to/file.jdx");
+    JDXHeader *header = JDX_AllocHeader();
+    JDXError read_error = JDX_ReadHeaderFromPath(header, "path/to/file.jdx");
 
-    if (header.error) {
-        // Handle possible error here
+    if (read_error) {
+        // Handle possible error here.
     }
 
     // From the header, you can access:
     // 1) JDX version of the file (header.version)
-    // 2) Color type of the images (header.color_type)
-    // 3) Width and height of the images (header.image_width, header.image_height)
-    // 4) Number of images/labels (header.item_count)
-    // 5) Size of the compressed body of the file (header.compressed_size)
+    // 2) Width and height of the images (header.image_width, header.image_height)
+    // 3) Bit depth of the images (header.bit_depth)
+    // 4) Number of images (header.image_count)
+    // 5) Stringified labels (header.labels w/ header.label_count)
 
-    // Unlike JDXDatasets, JDXHeaders do not need to be freed
+    // Like JDXDatasets, JDXHeaders also need to be freed to avoid memory leaks.
+    JDX_FreeHeader(header);
 }
 ```
 
