@@ -46,8 +46,8 @@ int main(void) {
         // - 32 bits => 4 bytes per pixel (red, green, blue, alpha)
 
         // Get label of image (both the string label and numberical label):
-        const char *label = image->label;
-        uint16_t label_num = image->label_index;
+        const char *label_str = image->label_str;
+        uint16_t label_num = image->label_num;
 
         // Get underlying pixel data:
         uint8_t *pixel_data = image->raw_data;

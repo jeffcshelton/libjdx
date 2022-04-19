@@ -125,8 +125,8 @@ JDXImage *JDX_GetImage(const JDXDataset *dataset, uint64_t index) {
 	memcpy(image_data, dataset->_raw_image_data + image_size * index, image_size);
 	image->raw_data = image_data;
 
-	image->label_index = dataset->_raw_labels[index];
-	image->label = strdup(dataset->header->labels[image->label_index]);
+	image->label_num = dataset->_raw_labels[index];
+	image->label_str = strdup(dataset->header->labels[image->label_num]);
 
 	return image;
 }
@@ -328,6 +328,6 @@ JDXError JDX_WriteDatasetToPath(JDXDataset *dataset, const char *path) {
 
 void JDX_FreeImage(JDXImage *image) {
 	free(image->raw_data);
-	free(image->label);
+	free(image->label_str);
 	free(image);
 }

@@ -16,6 +16,8 @@ extern "C" {
 #define JDX_BUILD_RC 3
 #define JDX_BUILD_RELEASE 4
 
+typedef uint16_t JDXLabel;
+
 typedef enum {
 	JDXError_NONE, // must be zero by standard
 
@@ -50,7 +52,7 @@ typedef struct {
 typedef struct {
 	JDXHeader *header;
 
-	uint16_t *_raw_labels;
+	JDXLabel *_raw_labels;
 	uint8_t *_raw_image_data;
 } JDXDataset;
 
@@ -60,8 +62,8 @@ typedef struct {
 	uint16_t width, height;
 	uint8_t bit_depth;
 
-	char *label;
-	uint16_t label_index;
+	char *label_str;
+	JDXLabel label_num;
 } JDXImage;
 
 extern const JDXVersion JDX_VERSION;
