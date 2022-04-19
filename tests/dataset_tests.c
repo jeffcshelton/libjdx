@@ -23,13 +23,15 @@ TEST_FUNC(WriteDatasetToPath) {
 	JDXError read_error = JDX_ReadDatasetFromPath(read_dataset, "./res/temp.jdx");
 
 	size_t image_block_size = JDX_GetImageSize(read_dataset->header) * read_dataset->header->image_count;
+	size_t label_block_size = sizeof(JDXLabel) * read_dataset->header->image_count;
 
 	final_state = (
-		write_error == JDXError_NONE &&
-		read_error == JDXError_NONE &&
-		read_dataset->header->image_count == example_dataset->header->image_count &&
-		JDX_CompareVersions(read_dataset->header->version, example_dataset->header->version) == 0 &&
-		memcmp(read_dataset->_raw_image_data, example_dataset->_raw_image_data, image_block_size) == 0
+		write_error == JDXError_NONE
+		&& read_error == JDXError_NONE
+		&& read_dataset->header->image_count == example_dataset->header->image_count
+		&& JDX_CompareVersions(read_dataset->header->version, example_dataset->header->version) == 0
+		&& memcmp(read_dataset->_raw_image_data, example_dataset->_raw_image_data, image_block_size) == 0
+		&& memcmp(read_dataset->_raw_labels, example_dataset->_raw_labels, label_block_size) == 0
 	) ? STATE_SUCCESS : STATE_FAILURE;
 
 	JDX_FreeDataset(read_dataset);
@@ -41,10 +43,12 @@ TEST_FUNC(CopyDataset) {
 	JDX_CopyDataset(copy, example_dataset);
 
 	size_t image_block_size = JDX_GetImageSize(copy->header) * copy->header->image_count;
+	size_t label_block_size = sizeof(JDXLabel) * copy->header->image_count;
 
 	final_state = (
-		copy->header->image_count == example_dataset->header->image_count &&
-		memcmp(copy->_raw_image_data, example_dataset->_raw_image_data, image_block_size) == 0
+		copy->header->image_count == example_dataset->header->image_count
+		&& memcmp(copy->_raw_image_data, example_dataset->_raw_image_data, image_block_size) == 0
+		&& memcmp(copy->_raw_labels, example_dataset->_raw_labels, label_block_size) == 0
 	) ? STATE_SUCCESS : STATE_FAILURE;
 
 	JDX_FreeDataset(copy);
