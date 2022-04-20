@@ -7,7 +7,7 @@
 #include <errno.h>
 #include <stdlib.h>
 
-const JDXVersion JDX_VERSION = { JDX_BUILD_ALPHA, 0, 4, 0 };
+const JDXVersion JDX_VERSION = { JDX_BUILD_DEV, 0, 4, 0 };
 
 JDXHeader *JDX_AllocHeader(void) {
 	return calloc(1, sizeof(JDXHeader));
