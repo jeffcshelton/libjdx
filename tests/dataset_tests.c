@@ -60,9 +60,14 @@ TEST_FUNC(AppendDataset) {
 
 	JDXError error = JDX_AppendDataset(copy, example_dataset);
 
+	size_t image_block_size = JDX_GetImageSize(example_dataset->header) * example_dataset->header->image_count;
+	size_t label_block_size = sizeof(JDXLabel) * example_dataset->header->image_count;
+
 	final_state = (
-		error == JDXError_NONE &&
-		copy->header->image_count == example_dataset->header->image_count * 2
+		error == JDXError_NONE
+		&& copy->header->image_count == example_dataset->header->image_count * 2
+		&& memcmp(example_dataset->_raw_image_data, copy->_raw_image_data + image_block_size, image_block_size) == 0
+		&& memcmp(example_dataset->_raw_labels, copy->_raw_labels + label_block_size, label_block_size) == 0
 	) ? STATE_SUCCESS : STATE_FAILURE;
 
 	JDX_FreeDataset(copy);
