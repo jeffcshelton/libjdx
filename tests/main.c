@@ -17,7 +17,7 @@ struct timespec start, end;
 #endif
 
 // Constant environment variables accessible by tests
-JDXDataset *example_dataset = NULL;
+JDXDataset example_dataset;
 
 // Variable set by tests to indicate if they passed, failed, or not executed (declared in header)
 TestState final_state;
@@ -60,11 +60,11 @@ static void init_testing_env(void) {
 #endif
 
 	example_dataset = JDX_AllocDataset();
-	JDX_ReadDatasetFromPath(example_dataset, "./res/example.jdx");
+	JDX_ReadDatasetFromPath(&example_dataset, "./res/example.jdx");
 }
 
 static void destroy_testing_env(void) {
-	JDX_FreeDataset(example_dataset);
+	JDX_FreeDataset(&example_dataset);
 }
 
 int main(void) {

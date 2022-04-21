@@ -14,30 +14,36 @@ TEST_FUNC(CompareVersions) {
 }
 
 TEST_FUNC(ReadHeaderFromPath) {
-	JDXHeader *header = JDX_AllocHeader();
-	JDXError error = JDX_ReadHeaderFromPath(header, "./res/example.jdx");
+	JDXHeader header = JDX_AllocHeader();
+	JDXError error = JDX_ReadHeaderFromPath(&header, "./res/example.jdx");
+
+	printf("Error: %d\n", error);
+	printf("Bit depth: %u\n", header.bit_depth);
+	printf("Bit depth: %u\n", header.image_width);
+	printf("Bit depth: %u\n", header.image_height);
+	printf("Bit depth: %u\n", header.image_count);
 
 	final_state = (
 		error == JDXError_NONE &&
-		JDX_CompareVersions(header->version, JDX_VERSION) == 0 &&
-		header->bit_depth == 24 &&
-		header->image_width == 52 &&
-		header->image_height == 52 &&
-		header->image_count == 8
+		JDX_CompareVersions(header.version, JDX_VERSION) == 0 &&
+		header.bit_depth == 24 &&
+		header.image_width == 52 &&
+		header.image_height == 52 &&
+		header.image_count == 8
 	) ? STATE_SUCCESS : STATE_FAILURE;
 
-	JDX_FreeHeader(header);
+	JDX_FreeHeader(&header);
 }
 
 TEST_FUNC(CopyHeader) {
-	JDXHeader *copy = JDX_AllocHeader();
-	JDX_CopyHeader(copy, example_dataset->header);
+	JDXHeader copy = JDX_AllocHeader();
+	JDX_CopyHeader(&copy, example_dataset.header);
 
 	final_state = (
-		copy->image_width == example_dataset->header->image_width &&
-		copy->image_height == example_dataset->header->image_height &&
-		copy->bit_depth == example_dataset->header->bit_depth
+		copy.image_width == example_dataset.header.image_width &&
+		copy.image_height == example_dataset.header.image_height &&
+		copy.bit_depth == example_dataset.header.bit_depth
 	) ? STATE_SUCCESS : STATE_FAILURE;
 
-	JDX_FreeHeader(copy);
+	JDX_FreeHeader(&copy);
 }

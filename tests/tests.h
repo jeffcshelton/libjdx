@@ -10,7 +10,7 @@ typedef enum {
 } TestState;
 
 // Constant testing environment variables
-extern JDXDataset *example_dataset;
+extern JDXDataset example_dataset;
 
 // Variables that tests set
 extern TestState final_state;

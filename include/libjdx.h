@@ -50,7 +50,7 @@ typedef struct {
 } JDXHeader;
 
 typedef struct {
-	JDXHeader *header;
+	JDXHeader header;
 
 	JDXLabel *_raw_labels;
 	uint8_t *_raw_image_data;
@@ -70,28 +70,28 @@ extern const JDXVersion JDX_VERSION;
 
 int32_t JDX_CompareVersions(JDXVersion v1, JDXVersion v2);
 
-JDXHeader *JDX_AllocHeader(void);
+JDXHeader JDX_AllocHeader(void);
 void JDX_FreeHeader(JDXHeader *header);
-void JDX_CopyHeader(JDXHeader *dest, const JDXHeader *src);
+void JDX_CopyHeader(JDXHeader *dest, JDXHeader src);
 
-size_t JDX_GetImageSize(const JDXHeader *header);
+size_t JDX_GetImageSize(JDXHeader header);
 
 JDXError JDX_ReadHeaderFromFile(JDXHeader *dest, FILE *file);
 JDXError JDX_ReadHeaderFromPath(JDXHeader *dest, const char *path);
-JDXError JDX_WriteHeaderToFile(JDXHeader *header, FILE *file);
+JDXError JDX_WriteHeaderToFile(JDXHeader header, FILE *file);
 
-JDXDataset *JDX_AllocDataset(void);
+JDXDataset JDX_AllocDataset(void);
 void JDX_FreeDataset(JDXDataset *dataset);
 
-void JDX_CopyDataset(JDXDataset *dest, const JDXDataset *src);
-JDXError JDX_AppendDataset(JDXDataset *dest, const JDXDataset *src);
+void JDX_CopyDataset(JDXDataset *dest, JDXDataset src);
+JDXError JDX_AppendDataset(JDXDataset *dest, JDXDataset src);
 
-JDXImage *JDX_GetImage(const JDXDataset *dataset, uint64_t index);
+JDXImage JDX_GetImage(JDXDataset dataset, uint64_t index);
 
 JDXError JDX_ReadDatasetFromFile(JDXDataset *dest, FILE *file);
 JDXError JDX_ReadDatasetFromPath(JDXDataset *dest, const char *path);
-JDXError JDX_WriteDatasetToFile(JDXDataset *dataset, FILE *file);
-JDXError JDX_WriteDatasetToPath(JDXDataset *dataset, const char *path);
+JDXError JDX_WriteDatasetToFile(JDXDataset dataset, FILE *file);
+JDXError JDX_WriteDatasetToPath(JDXDataset dataset, const char *path);
 
 void JDX_FreeImage(JDXImage *image);
 
