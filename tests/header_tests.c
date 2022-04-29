@@ -17,12 +17,6 @@ TEST_FUNC(ReadHeaderFromPath) {
 	JDXHeader header = JDX_AllocHeader();
 	JDXError error = JDX_ReadHeaderFromPath(&header, "./res/example.jdx");
 
-	printf("Error: %d\n", error);
-	printf("Bit depth: %u\n", header.bit_depth);
-	printf("Bit depth: %u\n", header.image_width);
-	printf("Bit depth: %u\n", header.image_height);
-	printf("Bit depth: %u\n", header.image_count);
-
 	final_state = (
 		error == JDXError_NONE &&
 		JDX_CompareVersions(header.version, JDX_VERSION) == 0 &&
