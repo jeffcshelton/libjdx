@@ -36,7 +36,7 @@ void JDX_CopyHeader(JDXHeader *dest, JDXHeader src) {
 	dest->image_height = src.image_height;
 	dest->bit_depth = src.bit_depth;
 
-	size_t label_bytes = (size_t) (src.labels[src.label_count - 1] - src.labels[0]) + strlen(src.labels[src.label_count - 1]) + 1;
+	size_t label_bytes = (size_t) (src.labels[src.label_count - 1] - *src.labels) + strlen(src.labels[src.label_count - 1]) + 1;
 	char *label_buffer = malloc(label_bytes);
 
 	dest->labels = malloc(src.label_count * sizeof(char **));
@@ -137,14 +137,11 @@ JDXError JDX_ReadHeaderFromPath(JDXHeader *dest, const char *path) {
 }
 
 JDXError JDX_WriteHeaderToFile(JDXHeader header, FILE *file) {
-	char corruption_check[3] = {'J', 'D', 'X'};
-
-	if (fwrite(corruption_check, 1, sizeof(corruption_check), file) != sizeof(corruption_check)) {
-		return JDXError_WRITE_FILE;
-	}
+	uint32_t label_bytes = (uint32_t) (header.labels[header.label_count - 1] - *header.labels) + strlen(header.labels[header.label_count - 1]) + 1;
 
 	// Must write this way to account for alignment of JDXHeader
 	if (
+		fwrite("JDX", 1, 3, file) != 3 ||
 		fwrite_le(&header.version.major, sizeof(header.version.major), file) == EOF ||
 		fwrite_le(&header.version.minor, sizeof(header.version.minor), file) == EOF ||
 		fwrite_le(&header.version.patch, sizeof(header.version.patch), file) == EOF ||
@@ -152,19 +149,9 @@ JDXError JDX_WriteHeaderToFile(JDXHeader header, FILE *file) {
 		fwrite_le(&header.image_width, sizeof(header.image_width), file) == EOF ||
 		fwrite_le(&header.image_height, sizeof(header.image_height), file) == EOF ||
 		fwrite_le(&header.bit_depth, sizeof(header.bit_depth), file) == EOF ||
-		fwrite_le(&header.label_count, sizeof(header.label_count), file) == EOF
-	) { return JDXError_WRITE_FILE; }
-
-	for (int_fast16_t l = 0; l < header.label_count; l++) {
-		char *label = header.labels[l];
-
-		if (fwrite_le(label, strlen(label) + 1, file) == EOF) {
-			return JDXError_WRITE_FILE;
-		}
-	}
-
-	if (
+		fwrite_le(&label_bytes, sizeof(label_bytes), file) == EOF ||
 		fwrite_le(&header.image_count, sizeof(header.image_count), file) == EOF ||
+		fwrite(*header.labels, 1, label_bytes, file) != label_bytes ||
 		fflush(file) == EOF
 	) { return JDXError_WRITE_FILE; }
 
