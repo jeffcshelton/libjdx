@@ -82,7 +82,6 @@ JDXError JDX_WriteHeaderToFile(JDXHeader header, FILE *file);
 
 JDXDataset JDX_AllocDataset(void);
 void JDX_FreeDataset(JDXDataset *dataset);
-
 void JDX_CopyDataset(JDXDataset *dest, JDXDataset src);
 JDXError JDX_AppendDataset(JDXDataset *dest, JDXDataset src);
 

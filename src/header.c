@@ -15,41 +15,35 @@ JDXHeader JDX_AllocHeader(void) {
 	return header;
 }
 
-static inline void free_header_labels(JDXHeader *header) {
-	if (header->labels) {
-		if (header->label_count > 0) {
-			for (uint_fast16_t l = 0; l < header->label_count; l++) {
-				free((char *) header->labels[l]);
-			}
-		}
-
-		free(header->labels);
-	}
-}
-
 void JDX_FreeHeader(JDXHeader *header) {
 	if (header == NULL) {
 		return;
 	}
 
-	free_header_labels(header);
+	if (header->labels) {
+		free(*header->labels);
+		free(header->labels);
+	}
+
 	header->labels = NULL;
 }
 
 void JDX_CopyHeader(JDXHeader *dest, JDXHeader src) {
+	JDX_FreeHeader(dest);
+
 	dest->version = src.version;
 	dest->image_width = src.image_width;
 	dest->image_height = src.image_height;
 	dest->bit_depth = src.bit_depth;
 
-	free_header_labels(dest);
+	size_t label_bytes = (size_t) (src.labels[src.label_count - 1] - src.labels[0]) + strlen(src.labels[src.label_count - 1]) + 1;
+	char *label_buffer = malloc(label_bytes);
+
 	dest->labels = malloc(src.label_count * sizeof(char **));
+	memcpy(label_buffer, *src.labels, label_bytes);
 
-	for (uint_fast16_t l = 0; l < src.label_count; l++) {
-		size_t label_size = strlen(src.labels[l]) + 1;
-
-		dest->labels[l] = malloc(label_size);
-		memcpy((char *) dest->labels[l], src.labels[l], label_size);
+	for (int l = 0; l < src.label_count; l++) {
+		dest->labels[l] = label_buffer + (size_t) (src.labels[l] - *src.labels);
 	}
 
 	dest->label_count = src.label_count;
@@ -65,16 +59,19 @@ size_t JDX_GetImageSize(JDXHeader header) {
 }
 
 JDXError JDX_ReadHeaderFromFile(JDXHeader *dest, FILE *file) {
-	char corruption_check[3];
-	char label_buffer[JDX_MAX_LABEL_LEN];
+	char *label_buffer = NULL;
 	JDXHeader header = { .labels = NULL };
 
 	TRY {
+		char corruption_check[3];
+
 		if (fread_le(corruption_check, sizeof(corruption_check), file) == EOF) {
 			THROW(JDXError_READ_FILE);
 		} else if (memcmp(corruption_check, "JDX", 3) != 0) {
 			THROW(JDXError_CORRUPT_FILE);
 		}
+
+		uint32_t label_bytes;
 
 		if (
 			fread_le(&header.version.major, sizeof(header.version.major), file) == EOF ||
@@ -84,48 +81,42 @@ JDXError JDX_ReadHeaderFromFile(JDXHeader *dest, FILE *file) {
 			fread_le(&header.image_width, sizeof(header.image_width), file) == EOF ||
 			fread_le(&header.image_height, sizeof(header.image_height), file) == EOF ||
 			fread_le(&header.bit_depth, sizeof(header.bit_depth), file) == EOF ||
-			fread_le(&header.label_count, sizeof(header.label_count), file) == EOF
+			fread_le(&label_bytes, sizeof(label_bytes), file) == EOF ||
+			fread_le(&header.image_count, sizeof(header.image_count), file) == EOF
 		) { THROW(JDXError_READ_FILE); }
-
-		// TODO: Consider doing this with only 2 mallocs; it may speed it up
-		header.labels = calloc(header.label_count, sizeof(char *));
-
-		for (int_fast16_t l = 0; l < header.label_count; l++) {
-			int i = 0;
-			while (i < JDX_MAX_LABEL_LEN && (label_buffer[i++] = getc(file)));
-
-			if (label_buffer[i - 1]) {
-				THROW(JDXError_CORRUPT_FILE);
-			}
-
-			header.labels[l] = malloc(i);
-			memcpy((char *) header.labels[l], label_buffer, i);
-		}
-
-		if (fread_le(&header.image_count, sizeof(header.image_count), file) == EOF) {
-			THROW(JDXError_READ_FILE);
-		}
 
 		if ((header.bit_depth != 8 && header.bit_depth != 24 && header.bit_depth != 32) || (header.version.build_type > JDX_BUILD_RELEASE)) {
 			THROW(JDXError_CORRUPT_FILE);
 		}
-	} CATCH(error) {
-		if (header.labels) {
-			for (int_fast16_t l = 0; l < header.label_count; l++) {
-				free((char *) header.labels[l]);
-			}
 
-			free(header.labels);
+		label_buffer = malloc(label_bytes);
+
+		if (fread(label_buffer, 1, label_bytes, file) != label_bytes) {
+			THROW(JDXError_READ_FILE);
+		} else if (label_buffer[label_bytes - 1] != '\0') {
+			THROW(JDXError_CORRUPT_FILE);
 		}
 
+		header.labels = malloc(label_bytes * sizeof(char *));
+		header.labels[0] = label_buffer;
+		header.label_count = 1;
+
+		char *label_ptr = label_buffer;
+		while (++label_ptr < label_buffer + label_bytes) {
+			if (*(label_ptr - 1) == '\0') {
+				header.labels[header.label_count++] = label_ptr;
+			}
+		}
+
+		header.labels = realloc(header.labels, header.label_count * sizeof(char *));
+	} CATCH(error) {
+		free(label_buffer);
 		return error;
 	}
 
-	if (dest && dest->labels) {
-		free_header_labels(dest);
-	}
-
+	JDX_FreeHeader(dest);
 	*dest = header;
+
 	return JDXError_NONE;
 }
 
